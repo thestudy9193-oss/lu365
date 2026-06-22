@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>루원365한의원 | 인천 가정동 한의원 · 365일 진료</title>
+  <meta name="description" content="인천 서구 가정동 루원365한의원. 4명의 한의사가 365일 진료. 교통사고 후유증, 척추·관절 클리닉, 추나요법, 입원치료. 가정역 6번 출구 도보 5분." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    /* ── Reset & Base ───────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { word-break: keep-all; overflow-wrap: break-word; }
+
+    :root {
+      --canvas:       #FAF6F1;
+      --canvas-soft:  #F0E8DE;
+      --ink:          #2A1C14;
+      --ink-soft:     #3D2C22;
+      --ink-mid:      #52392C;
+      --body:         #705C4F;
+      --body-mid:     #9E8676;
+      --mute:         #C4B4A8;
+      --gold:         #C8A882;
+      --gold-dark:    #b89060;
+      --primary:      #0d9488;
+      --primary-dark: #0f766e;
+      --primary-light:#ccfbf1;
+    }
+
+    html { scroll-behavior: smooth; background: var(--canvas); }
+
+    body {
+      font-family: "Pretendard Variable", Pretendard, -apple-system,
+        BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
+        "Noto Sans KR", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    h1, h2, h3, h4 {
+      line-height: 1.3;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* ── Utility ─────────────────────────────────────── */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    @media (min-width: 640px)  { .container { padding: 0 32px; } }
+    @media (min-width: 1024px) { .container { padding: 0 48px; } }
+
+    .hidden-mobile { display: none; }
+    @media (min-width: 768px) { .hidden-mobile { display: block; } .show-mobile { display: none; } }
+
+    /* ── Section Label ───────────────────────────────── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--body-mid);
+    }
+    .section-label::before {
+      content: "";
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.35;
+      flex-shrink: 0;
+    }
+    .section-label span {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 13px 28px;
+      border-radius: 0;
+      border: none;
+      cursor: pointer;
+      transition: background 150ms, color 150ms, border-color 150ms;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn-gold     { background: var(--gold); color: var(--ink); font-weight: 700; }
+    .btn-gold:hover { background: var(--gold-dark); color: #fff; }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline-cream {
+      background: transparent; color: var(--canvas);
+      border: 1.5px solid rgba(250,246,241,0.4);
+      padding: 12px 28px;
+    }
+    .btn-outline-cream:hover { border-color: rgba(250,246,241,0.8); background: rgba(250,246,241,0.08); }
+    .btn-outline-ink {
+      background: transparent; color: var(--ink);
+      border: 1.5px solid rgba(42,28,20,0.25);
+      font-size: 14px;
+      padding: 10px 22px;
+    }
+    .btn-outline-ink:hover { border-color: var(--ink); background: rgba(42,28,20,0.04); }
+    .btn-sm { font-size: 14px; padding: 10px 22px; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: var(--canvas-soft);
+      padding: 24px;
+      transition: box-shadow 200ms;
+    }
+    .card:hover { box-shadow: 0 6px 24px rgba(42,28,20,0.08); }
+    .card-white {
+      background: #fff;
+      padding: 24px;
+      border: 1px solid rgba(42,28,20,0.08);
+      transition: box-shadow 200ms, border-color 200ms;
+    }
+    .card-white:hover {
+      box-shadow: 0 4px 20px rgba(42,28,20,0.07);
+      border-color: rgba(200,168,130,0.4);
+    }
+
+    /* ── Grid Helpers ────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (min-width: 640px)  { .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+    @media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, 1fr); } .grid-2 { grid-template-columns: 1fr 1fr; gap: 48px; } }
+
+    .grid-3 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 640px)  { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+    .grid-cols-3-footer { display: grid; grid-template-columns: 1fr; gap: 40px; }
+    @media (min-width: 768px) { .grid-cols-3-footer { grid-template-columns: repeat(3, 1fr); gap: 40px; } }
+
+    /* ── Hero Animations ─────────────────────────────── */
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn  { from { opacity:0; }  to { opacity:1; } }
+    @keyframes slideX  { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+
+    .hero-eyebrow  { animation: fadeUp  0.75s cubic-bezier(0.22,1,0.36,1) both; }
+    .hero-headline { animation: fadeUp  0.9s  cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+    .hero-divider  { transform-origin: left center; animation: slideX 0.55s cubic-bezier(0.22,1,0.36,1) 0.52s both; }
+    .hero-sub      { animation: fadeUp  0.75s cubic-bezier(0.22,1,0.36,1) 0.62s both; }
+    .hero-cta      { animation: fadeUp  0.75s cubic-bezier(0.22,1,0.36,1) 0.82s both; }
+    .hero-infobar  { animation: fadeIn  0.6s  ease 1.1s both; }
+
+    /* ── ========================================= ──── */
+    /* ── HEADER ──────────────────────────────────── */
+    /* ── ========================================= ──── */
+    header { position: sticky; top: 0; z-index: 50; background: var(--canvas); }
+
+    .topbar {
+      background: var(--ink);
+      border-bottom: 1px solid rgba(200,168,130,0.15);
+      display: none;
+    }
+    @media (min-width: 768px) { .topbar { display: block; } }
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 8px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--body-mid);
+    }
+    .topbar-left  { display: flex; align-items: center; gap: 24px; }
+    .topbar-phone { display: flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 600; }
+
+    .navbar-inner {
+      border-bottom: 1px solid rgba(42,28,20,0.08);
+    }
+    .navbar-row {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 16px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    @media (min-width: 640px) { .navbar-row { padding: 0 24px; } }
+    @media (min-width: 1024px){ .navbar-row { padding: 0 48px; } }
+
+    .logo { font-weight: 700; font-size: 17px; color: var(--ink); letter-spacing: -0.3px; }
+    .logo span { color: var(--primary); }
+
+    nav.desktop { display: none; }
+    @media (min-width: 768px) { nav.desktop { display: flex; align-items: center; gap: 24px; } }
+    nav.desktop a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--body);
+      transition: color 150ms;
+    }
+    nav.desktop a:hover { color: var(--ink); }
+
+    .nav-cta {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 18px;
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-cta:hover { background: var(--primary-dark); }
+    @media (min-width: 768px) { .nav-cta { display: inline-flex; } }
+
+    /* mobile menu toggle */
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 8px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--body);
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: currentColor; transition: transform 0.2s; }
+    @media (min-width: 768px) { .hamburger { display: none; } }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      background: var(--canvas);
+      border-bottom: 1px solid rgba(42,28,20,0.08);
+      padding: 8px 16px 12px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      padding: 12px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      border-bottom: 1px solid rgba(42,28,20,0.06);
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu .mobile-cta {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--ink);
+      color: var(--canvas);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* ── ========================================= ──── */
+    /* ── HERO ────────────────────────────────────── */
+    /* ── ========================================= ──── */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      background: #2A1C14;
+    }
+    .hero-bg-radial {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 90% 100% at 70% 50%, #5C3A26 0%, #3D2419 45%, #2A1C14 80%);
+    }
+    .hero-bg-light {
+      position: absolute; top: 0; right: 0;
+      width: 75%; height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse 50% 70% at 85% 40%, rgba(200,168,130,0.18) 0%, transparent 60%);
+    }
+    .hero-bg-fade {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 128px;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(42,28,20,0.6), transparent);
+    }
+    .hero-circle-lg {
+      position: absolute; right: -80px; top: 50%;
+      transform: translateY(-50%);
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      border: 1px solid rgba(200,168,130,0.12);
+      box-shadow: inset 0 0 120px rgba(200,168,130,0.06);
+      pointer-events: none;
+      display: none;
+    }
+    .hero-circle-sm {
+      position: absolute; right: 40px; top: 50%;
+      transform: translateY(-50%);
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(200,168,130,0.08);
+      pointer-events: none;
+      display: none;
+    }
+    @media (min-width: 1024px) { .hero-circle-lg, .hero-circle-sm { display: block; } }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 1120px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 96px 24px;
+    }
+    @media (min-width: 640px)  { .hero-content { padding: 96px 32px; } }
+    @media (min-width: 1024px) { .hero-content { padding: 96px 48px; } }
+
+    .hero-inner { max-width: 480px; }
+
+    .hero-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .hero-eyebrow-line { width: 40px; height: 1px; background: var(--gold); }
+    .hero-eyebrow-text {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hero-headline {
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 24px;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      color: #FAF6F1;
+      letter-spacing: -0.5px;
+    }
+    .hero-headline em { color: var(--gold); font-style: normal; }
+
+    .hero-divider {
+      width: 56px; height: 2px;
+      background: var(--gold);
+      opacity: 0.5;
+      margin-bottom: 24px;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      line-height: 1.9;
+      margin-bottom: 40px;
+      max-width: 340px;
+      color: var(--body-mid);
+    }
+    .hero-sub strong { color: #C4B4A8; font-weight: 400; }
+
+    .hero-cta { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 640px) { .hero-cta { flex-direction: row; } }
+
+    .hero-infobar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      border-top: 1px solid rgba(200,168,130,0.12);
+      background: rgba(0,0,0,0.25);
+    }
+    .hero-infobar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 24px 32px;
+    }
+    @media (min-width: 640px) { .hero-infobar-inner { padding: 16px 32px; } }
+    .hero-info-item { font-size: 12px; color: var(--body-mid); display: flex; align-items: center; gap: 6px; }
+    .hero-info-item .icon { color: var(--gold); }
+    .hero-info-phone { font-weight: 600; color: var(--gold); }
+    .hero-info-hours { color: #706050; }
+
+    /* ── ========================================= ──── */
+    /* ── ABOUT SECTION ───────────────────────────── */
+    /* ── ========================================= ──── */
+    .about-section { padding: 80px 0; background: var(--canvas); }
+    @media (min-width: 640px) { .about-section { padding: 96px 0; } }
+
+    .two-col { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; }
+    @media (min-width: 1024px) { .two-col { grid-template-columns: 1fr 1fr; } }
+
+    .about-img-wrap { position: relative; }
+    .about-img-main {
+      position: relative;
+      border-radius: 0;
+      overflow: hidden;
+      height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #5C3A26 0%, #3D2419 50%, #2A1C14 100%);
+    }
+    .about-img-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 70% 40%, rgba(200,168,130,0.2) 0%, transparent 60%);
+    }
+    .about-img-center { text-align: center; position: relative; z-index: 1; }
+    .about-img-center .emoji { font-size: 64px; margin-bottom: 12px; }
+    .about-img-center .clinic-name { font-size: 13px; font-weight: 500; color: var(--gold); }
+    .about-img-center .clinic-sub  { font-size: 11px; color: var(--body-mid); margin-top: 4px; }
+
+    .stat-cards {
+      position: absolute;
+      bottom: -24px;
+      left: -16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat-card {
+      padding: 16px 20px;
+      background: #fff;
+      border: 1px solid rgba(42,28,20,0.08);
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(42,28,20,0.1);
+    }
+    .stat-card .num  { font-size: 20px; font-weight: 700; color: var(--primary); }
+    .stat-card .desc { font-size: 11px; color: var(--body-mid); margin-top: 2px; }
+
+    .about-text { }
+    .about-text h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); margin-bottom: 20px; letter-spacing: -0.3px; }
+    .about-text p  { font-size: 14px; line-height: 1.85; color: var(--body); margin-bottom: 20px; }
+    .about-text .p-sub { color: var(--body-mid); }
+    .about-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+
+    /* ── ========================================= ──── */
+    /* ── DOCTORS SECTION ─────────────────────────── */
+    /* ── ========================================= ──── */
+    .doctors-section {
+      padding: 80px 0 120px;
+      background: var(--canvas-soft);
+      overflow: hidden;
+    }
+    @media (min-width: 640px) { .doctors-section { padding: 96px 0 140px; } }
+
+    .doctors-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 64px;
+    }
+    .doctors-header h2  { font-size: clamp(1.4rem, 3vw, 1.9rem); letter-spacing: -0.3px; }
+    .doctors-header .sub { font-size: 12px; color: var(--body-mid); text-align: right; line-height: 1.6; display: none; max-width: 180px; }
+    @media (min-width: 640px) { .doctors-header .sub { display: block; } }
+
+    /* Desktop flex: staggered tilt cards */
+    .doctors-flex {
+      display: none;
+      gap: 16px;
+      align-items: flex-start;
+      padding-bottom: 80px;
+    }
+    @media (min-width: 640px) { .doctors-flex { display: flex; } }
+
+    .doctor-tilt-wrap { flex: 1; cursor: pointer; user-select: none; }
+
+    .doctor-tilt-card { will-change: transform; }
+
+    .doctor-photo {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+      height: 290px; padding: 22px;
+    }
+    .doctor-photo-glow   { position: absolute; inset: 0; pointer-events: none; }
+    .doctor-photo-en     { font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; position: relative; z-index: 1; opacity: 0.65; }
+    .doctor-photo-icon   { display: flex; align-items: center; justify-content: center; flex: 1; position: relative; z-index: 1; font-size: 72px; opacity: 0.18; line-height: 1; }
+    .doctor-photo-info   { position: relative; z-index: 1; }
+    .doctor-photo-spec   { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+    .doctor-photo-name   { font-size: 15px; font-weight: 700; line-height: 1.3; color: #FAF6F1; }
+    .doctor-photo-fade   { position: absolute; bottom: 0; left: 0; right: 0; height: 45%; background: linear-gradient(to top, rgba(0,0,0,0.45), transparent); pointer-events: none; }
+
+    .doctor-info-panel   { background: #2A1C14; padding: 16px 22px 20px; }
+    .doctor-info-panel p { font-size: 12px; color: var(--body-mid); line-height: 1.75; }
+
+    /* Mobile 2×2 grid */
+    .doctors-mobile { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (min-width: 640px) { .doctors-mobile { display: none; } }
+
+    .doctor-mobile-photo {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+      height: 180px; padding: 16px;
+    }
+    .doctor-mobile-en   { font-size: 9px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; opacity: 0.65; }
+    .doctor-mobile-spec { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+    .doctor-mobile-name { font-size: 13px; font-weight: 700; color: #FAF6F1; }
+    .doctor-mobile-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent); pointer-events: none; }
+    .doctor-mobile-bio  { background: #2A1C14; padding: 12px 16px; }
+    .doctor-mobile-bio p{ font-size: 12px; color: var(--body-mid); line-height: 1.7; }
+
+    .doctors-note { margin-top: 40px; text-align: center; font-size: 12px; color: #C4B4A8; }
+
+    /* ── ========================================= ──── */
+    /* ── SERVICES SECTION ────────────────────────── */
+    /* ── ========================================= ──── */
+    .services-section { padding: 80px 0; background: var(--canvas-soft); }
+    @media (min-width: 640px) { .services-section { padding: 96px 0; } }
+
+    .section-title-wrap { margin-bottom: 48px; text-align: center; }
+    .section-title-wrap .en {
+      display: inline-block;
+      font-size: 11px; font-weight: 500; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--body-mid); opacity: 0.6;
+      margin-bottom: 10px;
+    }
+    .section-title-wrap h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); letter-spacing: -0.3px; }
+    .section-title-wrap p  { font-size: 14px; color: var(--body); margin-top: 10px; }
+
+    .service-card {
+      background: var(--canvas);
+      padding: 24px;
+      border: 1px solid rgba(42,28,20,0.07);
+      transition: box-shadow 200ms, border-color 200ms;
+      cursor: default;
+    }
+    .service-card:hover {
+      box-shadow: 0 6px 24px rgba(42,28,20,0.09);
+      border-color: rgba(200,168,130,0.5);
+    }
+    .service-icon { font-size: 28px; margin-bottom: 14px; }
+    .service-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+    .service-desc  { font-size: 12px; color: var(--body); line-height: 1.75; }
+
+    .services-more { text-align: center; margin-top: 32px; }
+    .services-more a { font-size: 14px; font-weight: 600; color: var(--body); text-decoration: none; }
+    .services-more a:hover { text-decoration: underline; }
+
+    /* ── ========================================= ──── */
+    /* ── INPATIENT SECTION ───────────────────────── */
+    /* ── ========================================= ──── */
+    .inpatient-section { padding: 80px 0; background: var(--canvas); }
+    @media (min-width: 640px) { .inpatient-section { padding: 96px 0; } }
+
+    .facility-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .facility-hero {
+      grid-column: 1 / -1;
+      background: var(--ink);
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      min-height: 140px;
+    }
+    .facility-hero-glow {
+      position: absolute; top: 0; right: 0;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(200,168,130,0.15) 0%, transparent 60%);
+      transform: translate(20%, -20%);
+      pointer-events: none;
+    }
+    .facility-hero-label { font-size: 12px; font-weight: 500; color: var(--gold); margin-bottom: 4px; position: relative; z-index: 1; }
+    .facility-hero-title { font-size: 20px; font-weight: 700; color: var(--canvas); margin-bottom: 8px; position: relative; z-index: 1; }
+    .facility-hero-sub   { font-size: 12px; color: var(--body-mid); position: relative; z-index: 1; }
+
+    .facility-sub {
+      background: var(--canvas-soft);
+      padding: 20px;
+    }
+    .facility-sub-label { font-size: 11px; color: var(--body-mid); margin-bottom: 8px; }
+    .facility-sub ul { list-style: none; }
+    .facility-sub li { font-size: 12px; color: var(--body); margin-bottom: 4px; }
+    .facility-sub li::before { content: "·"; margin-right: 6px; color: var(--body-mid); }
+
+    .inpatient-text h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); margin-bottom: 20px; letter-spacing: -0.3px; }
+    .inpatient-text p  { font-size: 14px; color: var(--body); line-height: 1.85; margin-bottom: 32px; }
+
+    /* ── ========================================= ──── */
+    /* ── COLUMNS SECTION ─────────────────────────── */
+    /* ── ========================================= ──── */
+    .columns-section { padding: 80px 0; background: var(--canvas-soft); }
+    @media (min-width: 640px) { .columns-section { padding: 96px 0; } }
+
+    .columns-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; }
+    .columns-header h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); letter-spacing: -0.3px; }
+    .columns-all { font-size: 14px; font-weight: 600; color: var(--body); display: none; }
+    @media (min-width: 640px) { .columns-all { display: inline; } }
+    .columns-all:hover { text-decoration: underline; }
+
+    .column-card {
+      background: var(--canvas);
+      border: 1px solid rgba(42,28,20,0.07);
+      transition: box-shadow 200ms;
+      overflow: hidden;
+    }
+    .column-card:hover { box-shadow: 0 6px 24px rgba(42,28,20,0.08); }
+    .column-thumb {
+      height: 160px;
+      background: linear-gradient(135deg, #3D2C22, #52392C);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+    }
+    .column-body { padding: 20px; }
+    .column-tag   { font-size: 11px; font-weight: 500; color: var(--primary); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .column-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 8px; line-height: 1.4; }
+    .column-excerpt { font-size: 13px; color: var(--body); line-height: 1.7; margin-bottom: 16px; }
+    .column-date  { font-size: 11px; color: var(--body-mid); }
+
+    .columns-mobile-more { text-align: center; margin-top: 32px; }
+    .columns-mobile-more a { font-size: 14px; font-weight: 600; color: var(--body); }
+    .columns-mobile-more a:hover { text-decoration: underline; }
+    @media (min-width: 640px) { .columns-mobile-more { display: none; } }
+
+    /* ── ========================================= ──── */
+    /* ── LOCATION STRIP ──────────────────────────── */
+    /* ── ========================================= ──── */
+    .location-strip { padding: 56px 0; background: #3D2C22; }
+
+    .location-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    @media (min-width: 640px) { .location-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+
+    .location-item {}
+    .location-item .loc-label { font-size: 12px; font-weight: 500; color: var(--gold); margin-bottom: 4px; }
+    .location-item .loc-main  { font-size: 14px; font-weight: 600; color: var(--canvas); margin-bottom: 2px; }
+    .location-item .loc-sub   { font-size: 12px; color: var(--body-mid); }
+    .location-item .loc-note  { font-size: 12px; color: #705C4F; margin-top: 2px; }
+    .location-phone { font-size: 20px; font-weight: 700; color: var(--canvas); margin-top: 4px; text-decoration: none; }
+    .location-phone:hover { text-decoration: underline; }
+    .location-cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 14px; font-weight: 700; padding: 12px 24px; background: var(--gold); color: var(--ink); transition: background 150ms; }
+    .location-cta:hover { background: var(--gold-dark); color: #fff; }
+
+    /* ── ========================================= ──── */
+    /* ── CTA SECTION ─────────────────────────────── */
+    /* ── ========================================= ──── */
+    .cta-section { padding: 80px 0; background: var(--primary); text-align: center; }
+    @media (min-width: 640px) { .cta-section { padding: 96px 0; } }
+
+    .cta-en    { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--primary-light); opacity: 0.7; margin-bottom: 20px; }
+    .cta-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; color: #fff; letter-spacing: -0.5px; line-height: 1.3; margin-bottom: 12px; }
+    .cta-sub   { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 40px; }
+    .cta-btns  { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    @media (min-width: 640px) { .cta-btns { flex-direction: row; justify-content: center; } }
+    .btn-white { background: #fff; color: var(--primary-dark); font-weight: 700; }
+    .btn-white:hover { background: #f0fdfa; }
+    .btn-outline-white {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; font-size: 15px; font-weight: 600; padding: 13px 28px;
+      background: transparent; color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      transition: border-color 150ms, background 150ms;
+    }
+    .btn-outline-white:hover { border-color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.08); }
+
+    .cta-features {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 16px; max-width: 600px; margin: 48px auto 0;
+    }
+    @media (min-width: 640px) { .cta-features { grid-template-columns: repeat(4, 1fr); } }
+    .cta-feat { text-align: center; }
+    .cta-feat .num  { font-size: 22px; font-weight: 700; color: #fff; }
+    .cta-feat .desc { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 4px; }
+
+    /* ── ========================================= ──── */
+    /* ── FOOTER ──────────────────────────────────── */
+    /* ── ========================================= ──── */
+    footer { background: #201515; padding: 56px 0 40px; }
+
+    .footer-name { font-size: 14px; font-weight: 700; color: var(--canvas-soft); margin-bottom: 4px; letter-spacing: -0.3px; }
+    .footer-tag  { font-size: 11px; font-weight: 500; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 16px; text-transform: uppercase; opacity: 0.7; }
+    .footer-list { list-style: none; }
+    .footer-list li { font-size: 13px; color: var(--mute); margin-bottom: 6px; }
+    .footer-list .sub { color: #939084; font-size: 12px; }
+    .footer-phone { font-size: 13px; font-weight: 600; color: var(--canvas-soft); margin-top: 8px; text-decoration: none; }
+    .footer-phone:hover { color: #fff; }
+
+    .footer-col-title { font-size: 13px; font-weight: 700; color: var(--canvas-soft); margin-bottom: 16px; }
+    .footer-hours { list-style: none; }
+    .footer-hours li { margin-bottom: 12px; }
+    .footer-hours .day  { font-size: 12px; color: #939084; }
+    .footer-hours .time { font-size: 13px; color: var(--canvas-soft); }
+    .footer-hours .note { font-size: 11px; color: var(--mute); }
+
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: 8px; }
+    .footer-links a { font-size: 13px; color: var(--mute); transition: color 150ms; }
+    .footer-links a:hover { color: var(--canvas-soft); }
+
+    .footer-bottom {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(248,244,240,0.08);
+    }
+    .footer-bottom p { font-size: 12px; color: #605d52; line-height: 1.7; }
+    .footer-bottom .copy { color: #3f3c35; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- HEADER                                             -->
+<!-- ══════════════════════════════════════════════════ -->
+<header>
+  <!-- 상단 정보 바 -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span>📍 인천 서구 염곡로464번길 15 쓰리엠타워 3층</span>
+        <span>⏰ 평일 09:30 - 21:00 &nbsp;|&nbsp; 주말·공휴일 09:00 - 16:00</span>
+      </div>
+      <a href="tel:0507-1323-4975" class="topbar-phone">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+        </svg>
+        0507-1323-4975
+      </a>
+    </div>
+  </div>
+
+  <!-- 메인 네비 -->
+  <div class="navbar-inner">
+    <div class="navbar-row">
+      <a href="/" class="logo">루원365<span>한의원</span></a>
+
+      <nav class="desktop">
+        <a href="/">홈</a>
+        <a href="/about">한의원 소개</a>
+        <a href="/services">진료 안내</a>
+        <a href="/columns">건강 칼럼</a>
+        <a href="/contact">오시는 길</a>
+      </nav>
+
+      <a href="tel:0507-1323-4975" class="btn nav-cta">지금 전화 문의</a>
+
+      <button class="hamburger" id="hamburger" aria-label="메뉴">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 모바일 메뉴 -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/">홈</a>
+    <a href="/about">한의원 소개</a>
+    <a href="/services">진료 안내</a>
+    <a href="/columns">건강 칼럼</a>
+    <a href="/contact">오시는 길</a>
+    <a href="tel:0507-1323-4975" class="mobile-cta">📞 0507-1323-4975</a>
+  </div>
+</header>
+
+<main style="flex: 1;">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- HERO                                               -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg-radial"></div>
+  <div class="hero-bg-light"></div>
+  <div class="hero-bg-fade"></div>
+  <div class="hero-circle-lg"></div>
+  <div class="hero-circle-sm"></div>
+
+  <div class="hero-content">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <div class="hero-eyebrow-line"></div>
+        <span class="hero-eyebrow-text">Inwon 365 Oriental Medicine Clinic</span>
+      </div>
+
+      <h1 class="hero-headline">
+        일상 속 건강을<br />
+        세심하게 살피는<br />
+        <em>루원365한의원</em>
+      </h1>
+
+      <div class="hero-divider"></div>
+
+      <p class="hero-sub">
+        교통사고 후유증부터 척추·관절 클리닉,<br />
+        추나요법, 입원치료까지.<br />
+        <strong>4명의 한의사가 365일 함께합니다.</strong>
+      </p>
+
+      <div class="hero-cta">
+        <a href="/services" class="btn btn-gold">진료 안내 보기</a>
+        <a href="/contact" class="btn btn-outline-cream">오시는 길 확인하기</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-infobar">
+    <div class="hero-infobar-inner">
+      <span class="hero-info-item">
+        <span class="icon">📍</span>
+        인천 서구 염곡로464번길 15 쓰리엠타워 3층
+      </span>
+      <span class="hero-info-item">
+        <span class="icon">📞</span>
+        <a href="tel:0507-1323-4975" class="hero-info-phone">0507-1323-4975</a>
+      </span>
+      <span class="hero-info-item hero-info-hours">
+        평일 09:30–21:00 &nbsp;·&nbsp; 주말·공휴일 09:00–16:00
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ABOUT                                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="about-section">
+  <div class="container">
+    <div class="two-col">
+      <!-- 텍스트 -->
+      <div class="about-text">
+        <div class="section-label"><span>About</span></div>
+        <h2>진료가 필요한 분들 곁에서<br />365일 함께합니다</h2>
+        <p>
+          루원365한의원은 환자분 한 분 한 분의 상태를 세심하게 살피는 것을
+          진료의 기본으로 삼고 있습니다. 불편감의 원인을 함께 파악하고
+          개인에 맞는 진료 방향을 안내해드립니다.
+        </p>
+        <p class="p-sub">
+          4명의 한의사가 공휴일 포함 365일 진료합니다.<br />
+          교통사고, 척추·관절, 입원치료까지 폭넓게 안내해드립니다.
+        </p>
+        <div class="about-cta">
+          <a href="/about" class="btn btn-outline-ink">한의원 소개 →</a>
+          <a href="/contact" class="btn btn-primary btn-sm">오시는 길</a>
+        </div>
+      </div>
+
+      <!-- 이미지 + 통계 -->
+      <div class="about-img-wrap">
+        <div class="about-img-main">
+          <div class="about-img-overlay"></div>
+          <div class="about-img-center">
+            <div class="emoji">🌿</div>
+            <div class="clinic-name">루원365한의원</div>
+            <div class="clinic-sub">인천 서구 가정동</div>
+          </div>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="num">4명</div>
+            <div class="desc">한의사</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">365일</div>
+            <div class="desc">연중무휴</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- DOCTORS                                            -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="doctors-section">
+  <div class="container">
+    <div class="doctors-header">
+      <div>
+        <div class="section-label"><span>Our Doctors</span></div>
+        <h2>의료진 소개</h2>
+      </div>
+      <p class="sub">4명의 한의사가<br />365일 함께합니다</p>
+    </div>
+
+    <!-- 데스크탑: 스태거 틸트 카드 -->
+    <div class="doctors-flex" id="doctorsFlex">
+
+      <!-- 카드 1: 대표원장 / 척추·관절 -->
+      <div class="doctor-tilt-wrap" data-init-rot="-2.5" data-offset="0"
+           style="margin-top:0px;">
+        <div class="doctor-tilt-card"
+             style="box-shadow:0 8px 32px rgba(42,28,20,0.18); transform:perspective(1400px) rotateZ(-2.5deg); transition:transform 0.55s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease;">
+          <div class="doctor-photo"
+               style="background:linear-gradient(150deg,#5C3A26 0%,#3D2419 55%,#2A1C14 100%);">
+            <div class="doctor-photo-glow"
+                 style="background:radial-gradient(ellipse 110% 70% at 50% -10%,rgba(200,168,130,0.2) 0%,transparent 60%);"></div>
+            <span class="doctor-photo-en" style="color:#C8A882;">Head Director</span>
+            <div class="doctor-photo-icon">🦴</div>
+            <div class="doctor-photo-info">
+              <div class="doctor-photo-spec" style="color:#C8A882;">척추·관절 / 추나요법</div>
+              <div class="doctor-photo-name">대표원장</div>
+            </div>
+            <div class="doctor-photo-fade"></div>
+          </div>
+          <div class="doctor-info-panel" style="border-top:1px solid rgba(200,168,130,0.13);">
+            <p>척추 및 관절 불편감에 대한 체계적인 한방 진료와 추나요법을 전문으로 합니다. 내원 상담을 통해 개인에 맞는 진료 방향을 안내해드립니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드 2: 진료원장 / 교통사고 -->
+      <div class="doctor-tilt-wrap" data-init-rot="2" data-offset="52"
+           style="margin-top:52px;">
+        <div class="doctor-tilt-card"
+             style="box-shadow:0 8px 32px rgba(42,28,20,0.18); transform:perspective(1400px) rotateZ(2deg); transition:transform 0.55s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease;">
+          <div class="doctor-photo"
+               style="background:linear-gradient(150deg,#1E3835 0%,#112220 55%,#0a1816 100%);">
+            <div class="doctor-photo-glow"
+                 style="background:radial-gradient(ellipse 110% 70% at 50% -10%,rgba(77,182,172,0.2) 0%,transparent 60%);"></div>
+            <span class="doctor-photo-en" style="color:#4DB6AC;">Director</span>
+            <div class="doctor-photo-icon">🤲</div>
+            <div class="doctor-photo-info">
+              <div class="doctor-photo-spec" style="color:#4DB6AC;">교통사고 후유증 / 재활</div>
+              <div class="doctor-photo-name">진료원장</div>
+            </div>
+            <div class="doctor-photo-fade"></div>
+          </div>
+          <div class="doctor-info-panel" style="border-top:1px solid rgba(77,182,172,0.13);">
+            <p>교통사고 이후 남은 불편감과 수술 후 재활에 특화된 진료를 제공합니다. 자동차 보험 적용 여부는 내원 시 안내해드립니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드 3: 진료원장 / 비만 -->
+      <div class="doctor-tilt-wrap" data-init-rot="-1.5" data-offset="20"
+           style="margin-top:20px;">
+        <div class="doctor-tilt-card"
+             style="box-shadow:0 8px 32px rgba(42,28,20,0.18); transform:perspective(1400px) rotateZ(-1.5deg); transition:transform 0.55s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease;">
+          <div class="doctor-photo"
+               style="background:linear-gradient(150deg,#4A3020 0%,#301C10 55%,#1e100a 100%);">
+            <div class="doctor-photo-glow"
+                 style="background:radial-gradient(ellipse 110% 70% at 50% -10%,rgba(232,213,184,0.2) 0%,transparent 60%);"></div>
+            <span class="doctor-photo-en" style="color:#E8D5B8;">Director</span>
+            <div class="doctor-photo-icon">🌿</div>
+            <div class="doctor-photo-info">
+              <div class="doctor-photo-spec" style="color:#E8D5B8;">비만·다이어트 클리닉</div>
+              <div class="doctor-photo-name">진료원장</div>
+            </div>
+            <div class="doctor-photo-fade"></div>
+          </div>
+          <div class="doctor-info-panel" style="border-top:1px solid rgba(232,213,184,0.13);">
+            <p>한약 처방과 심부고주파(아디포7000d)를 활용한 체계적인 체중 관리 프로그램을 안내합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드 4: 진료원장 / 소아 -->
+      <div class="doctor-tilt-wrap" data-init-rot="3" data-offset="72"
+           style="margin-top:72px;">
+        <div class="doctor-tilt-card"
+             style="box-shadow:0 8px 32px rgba(42,28,20,0.18); transform:perspective(1400px) rotateZ(3deg); transition:transform 0.55s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease;">
+          <div class="doctor-photo"
+               style="background:linear-gradient(150deg,#2C3044 0%,#1A1E30 55%,#10121e 100%);">
+            <div class="doctor-photo-glow"
+                 style="background:radial-gradient(ellipse 110% 70% at 50% -10%,rgba(200,168,130,0.2) 0%,transparent 60%);"></div>
+            <span class="doctor-photo-en" style="color:#C8A882;">Director</span>
+            <div class="doctor-photo-icon">🌱</div>
+            <div class="doctor-photo-info">
+              <div class="doctor-photo-spec" style="color:#C8A882;">어린이·소아 한방</div>
+              <div class="doctor-photo-name">진료원장</div>
+            </div>
+            <div class="doctor-photo-fade"></div>
+          </div>
+          <div class="doctor-info-panel" style="border-top:1px solid rgba(200,168,130,0.13);">
+            <p>성장, 비염, 아토피 등 어린이 건강을 위한 소아 한방 진료를 안내합니다. 아이의 상태에 맞는 진료를 제공합니다.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.doctors-flex -->
+
+    <!-- 모바일: 2×2 그리드 -->
+    <div class="doctors-mobile">
+      <div>
+        <div class="doctor-mobile-photo" style="background:linear-gradient(150deg,#5C3A26 0%,#3D2419 55%,#2A1C14 100%);">
+          <span class="doctor-mobile-en" style="color:#C8A882;">Head Director</span>
+          <div>
+            <div class="doctor-mobile-spec" style="color:#C8A882;">척추·관절 / 추나요법</div>
+            <div class="doctor-mobile-name">대표원장</div>
+          </div>
+          <div class="doctor-mobile-fade"></div>
+        </div>
+        <div class="doctor-mobile-bio"><p>척추 및 관절 불편감에 대한 체계적인 한방 진료와 추나요법을 전문으로 합니다.</p></div>
+      </div>
+      <div>
+        <div class="doctor-mobile-photo" style="background:linear-gradient(150deg,#1E3835 0%,#112220 55%,#0a1816 100%);">
+          <span class="doctor-mobile-en" style="color:#4DB6AC;">Director</span>
+          <div>
+            <div class="doctor-mobile-spec" style="color:#4DB6AC;">교통사고 후유증 / 재활</div>
+            <div class="doctor-mobile-name">진료원장</div>
+          </div>
+          <div class="doctor-mobile-fade"></div>
+        </div>
+        <div class="doctor-mobile-bio"><p>교통사고 이후 남은 불편감과 수술 후 재활에 특화된 진료를 제공합니다.</p></div>
+      </div>
+      <div>
+        <div class="doctor-mobile-photo" style="background:linear-gradient(150deg,#4A3020 0%,#301C10 55%,#1e100a 100%);">
+          <span class="doctor-mobile-en" style="color:#E8D5B8;">Director</span>
+          <div>
+            <div class="doctor-mobile-spec" style="color:#E8D5B8;">비만·다이어트 클리닉</div>
+            <div class="doctor-mobile-name">진료원장</div>
+          </div>
+          <div class="doctor-mobile-fade"></div>
+        </div>
+        <div class="doctor-mobile-bio"><p>한약 처방과 심부고주파(아디포7000d)를 활용한 체계적인 체중 관리 프로그램을 안내합니다.</p></div>
+      </div>
+      <div>
+        <div class="doctor-mobile-photo" style="background:linear-gradient(150deg,#2C3044 0%,#1A1E30 55%,#10121e 100%);">
+          <span class="doctor-mobile-en" style="color:#C8A882;">Director</span>
+          <div>
+            <div class="doctor-mobile-spec" style="color:#C8A882;">어린이·소아 한방</div>
+            <div class="doctor-mobile-name">진료원장</div>
+          </div>
+          <div class="doctor-mobile-fade"></div>
+        </div>
+        <div class="doctor-mobile-bio"><p>성장, 비염, 아토피 등 어린이 건강을 위한 소아 한방 진료를 안내합니다.</p></div>
+      </div>
+    </div><!-- /.doctors-mobile -->
+
+    <p class="doctors-note">※ 원장님 성함은 추후 업데이트 예정입니다.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SERVICES                                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="services-section">
+  <div class="container">
+    <div class="section-title-wrap">
+      <div class="en">Services</div>
+      <h2>주요 진료 분야</h2>
+      <p>교통사고부터 어린이 클리닉까지 폭넓은 한방 진료를 안내합니다.</p>
+    </div>
+    <div class="grid-4">
+      <div class="service-card">
+        <div class="service-icon">🚗</div>
+        <div class="service-title">교통사고 후유증 관리</div>
+        <p class="service-desc">교통사고 이후 남아있는 근골격계 불편감을 체계적으로 관리합니다. 자동차 보험 적용 가능 여부는 내원 시 안내해드립니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🦴</div>
+        <div class="service-title">척추 클리닉</div>
+        <p class="service-desc">목·허리 디스크, 척추관 협착증 등 척추 관련 불편감에 대해 개인 상태에 맞는 진료를 안내합니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤝</div>
+        <div class="service-title">관절 클리닉</div>
+        <p class="service-desc">무릎·어깨 관절 불편감 및 수술 후 재활에 대해 꼼꼼하게 상담하고 진료 방향을 함께 논의합니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤲</div>
+        <div class="service-title">추나요법</div>
+        <p class="service-desc">척추 및 관절 구조적 불균형을 교정하는 추나요법을 전문적으로 시행합니다. 건강보험 적용 여부는 내원 상담 시 안내해드립니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🌿</div>
+        <div class="service-title">비만·다이어트 클리닉</div>
+        <p class="service-desc">한약 처방과 심부고주파(아디포7000d) 등을 활용한 체계적인 체중 관리 프로그램을 안내합니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">👶</div>
+        <div class="service-title">어린이 클리닉</div>
+        <p class="service-desc">성장, 비염, 아토피 등 어린이의 건강 상태에 맞는 소아 한방 진료를 안내합니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🏥</div>
+        <div class="service-title">입원 치료</div>
+        <p class="service-desc">1~3인실 입원실을 운영합니다. 교통사고, 수술 후 재활, 척추 질환 등 집중 관리가 필요한 분께 적합합니다.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💊</div>
+        <div class="service-title">소화·체력 상담</div>
+        <p class="service-desc">소화 기능 저하, 만성 피로, 체력 저하 등 전반적인 컨디션에 대해 한방 관점에서 상담해드립니다.</p>
+      </div>
+    </div>
+    <div class="services-more">
+      <a href="/services">진료 안내 전체 보기 →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- INPATIENT CARE                                     -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="inpatient-section">
+  <div class="container">
+    <div class="two-col">
+      <!-- 시설 카드 -->
+      <div class="facility-grid">
+        <div class="facility-hero">
+          <div class="facility-hero-glow"></div>
+          <div class="facility-hero-label">6층 입원실</div>
+          <div class="facility-hero-title">1~3인실 입원치료</div>
+          <div class="facility-hero-sub">교통사고 후유증 · 수술 후 재활 · 척추 질환</div>
+        </div>
+        <div class="facility-sub">
+          <div class="facility-sub-label">3층 외래</div>
+          <ul>
+            <li>추나치료실</li>
+            <li>비만치료실</li>
+            <li>체형측정실</li>
+          </ul>
+        </div>
+        <div class="facility-sub">
+          <div class="facility-sub-label">치료 장비</div>
+          <ul>
+            <li>인바디·엑스바디</li>
+            <li>심부고주파</li>
+            <li>추나 전용장비</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 텍스트 -->
+      <div class="inpatient-text">
+        <div class="section-label"><span>Inpatient Care</span></div>
+        <h2>집중 관리가 필요한 분을 위한<br />입원치료 시설 운영</h2>
+        <p>
+          6층에 1~3인실 입원실을 운영하며, 교통사고 후유증,
+          수술 후 재활, 척추 질환 등 외래 진료만으로는 부족한
+          경우 입원치료를 안내해드릴 수 있습니다.
+        </p>
+        <a href="/services" class="btn btn-outline-ink">시설 안내 보기 →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- COLUMNS                                            -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="columns-section">
+  <div class="container">
+    <div class="columns-header">
+      <div>
+        <div class="section-label"><span>Column</span></div>
+        <h2>건강 칼럼</h2>
+      </div>
+      <a href="/columns" class="columns-all">전체 보기 →</a>
+    </div>
+    <div class="grid-3">
+      <div class="column-card">
+        <div class="column-thumb">🦴</div>
+        <div class="column-body">
+          <div class="column-tag">척추·관절</div>
+          <div class="column-title">허리 디스크, 단순 요통과 어떻게 구별할까요?</div>
+          <p class="column-excerpt">디스크 증상과 단순 근육통을 구별하는 방법, 한방 치료 접근법에 대해 알아봅니다.</p>
+          <div class="column-date">2025. 06. 01</div>
+        </div>
+      </div>
+      <div class="column-card">
+        <div class="column-thumb">🚗</div>
+        <div class="column-body">
+          <div class="column-tag">교통사고</div>
+          <div class="column-title">교통사고 후 목이 뻐근하다면? 한방 치료 알아보기</div>
+          <p class="column-excerpt">교통사고 후 나타나는 편타 손상(채찍질 증후군)의 증상과 한방 치료 방법을 안내합니다.</p>
+          <div class="column-date">2025. 05. 20</div>
+        </div>
+      </div>
+      <div class="column-card">
+        <div class="column-thumb">🌿</div>
+        <div class="column-body">
+          <div class="column-tag">건강관리</div>
+          <div class="column-title">추나요법이란? 건강보험 적용 조건 정리</div>
+          <p class="column-excerpt">추나요법의 원리와 종류, 건강보험 적용 가능한 조건에 대해 정리합니다.</p>
+          <div class="column-date">2025. 05. 10</div>
+        </div>
+      </div>
+    </div>
+    <div class="columns-mobile-more">
+      <a href="/columns">칼럼 전체 보기 →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- LOCATION STRIP                                     -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="location-strip">
+  <div class="container">
+    <div class="location-grid">
+      <div class="location-item">
+        <div class="loc-label">📍 주소</div>
+        <div class="loc-main">인천 서구 염곡로464번길 15 쓰리엠타워 3층</div>
+        <div class="loc-sub">인천2호선 가정역 6번 출구 도보 약 5분</div>
+      </div>
+      <div class="location-item">
+        <div class="loc-label">⏰ 진료시간</div>
+        <div class="loc-main">평일 09:30 – 21:00</div>
+        <div class="loc-sub">토·일·공휴일 09:00 – 16:00</div>
+        <div class="loc-note">연중무휴 365일 진료</div>
+      </div>
+      <div class="location-item">
+        <div class="loc-label">📞 전화 문의</div>
+        <a href="tel:0507-1323-4975" class="location-phone">0507-1323-4975</a>
+        <div style="margin-top:12px;">
+          <a href="/contact" class="location-cta">오시는 길 자세히 →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CTA                                                -->
+<!-- ══════════════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="container">
+    <p class="cta-en">Make an Appointment</p>
+    <h2 class="cta-title">지금 바로 문의하세요</h2>
+    <p class="cta-sub">365일 연중무휴 · 예약 없이 방문 가능 · 전화 문의 환영</p>
+    <div class="cta-btns">
+      <a href="tel:0507-1323-4975" class="btn btn-white">📞 전화 문의</a>
+      <a href="/contact" class="btn-outline-white">오시는 길 확인 →</a>
+    </div>
+    <div class="cta-features">
+      <div class="cta-feat">
+        <div class="num">4명</div>
+        <div class="desc">한의사 상주</div>
+      </div>
+      <div class="cta-feat">
+        <div class="num">365일</div>
+        <div class="desc">연중무휴</div>
+      </div>
+      <div class="cta-feat">
+        <div class="num">6층</div>
+        <div class="desc">입원실 운영</div>
+      </div>
+      <div class="cta-feat">
+        <div class="num">3층</div>
+        <div class="desc">외래진료</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FOOTER                                             -->
+<!-- ══════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="grid-cols-3-footer">
+      <!-- 병원 정보 -->
+      <div>
+        <div class="footer-name">루원365한의원</div>
+        <div class="footer-tag">4명의 한의사 · 365일 진료</div>
+        <ul class="footer-list">
+          <li>인천 서구 염곡로464번길 15 쓰리엠타워 3층</li>
+          <li class="sub">인천2호선 가정역 6번 출구 도보 약 5분</li>
+          <li style="margin-top: 8px;">
+            <a href="tel:0507-1323-4975" class="footer-phone">📞 0507-1323-4975</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 진료시간 -->
+      <div>
+        <div class="footer-col-title">진료시간</div>
+        <ul class="footer-hours">
+          <li>
+            <div class="day">평일 (월~금)</div>
+            <div class="time">09:30 - 21:00</div>
+            <div class="note">점심 13:00 - 14:00 / 접수마감 20:30</div>
+          </li>
+          <li>
+            <div class="day">토·일·공휴일</div>
+            <div class="time">09:00 - 16:00</div>
+            <div class="note">점심 12:00 - 12:30 / 접수마감 15:30</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 바로가기 -->
+      <div>
+        <div class="footer-col-title">바로가기</div>
+        <ul class="footer-links">
+          <li><a href="/about">한의원 소개</a></li>
+          <li><a href="/services">진료 안내</a></li>
+          <li><a href="/columns">건강 칼럼</a></li>
+          <li><a href="/contact">오시는 길</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 하단 고지 -->
+    <div class="footer-bottom">
+      <p>
+        본 사이트의 내용은 의료 정보 제공을 목적으로 하며, 개인의 증상에 대한 진단·치료를 대체하지 않습니다.
+        증상이 있으신 경우 의료기관 방문 후 전문 의료진의 상담을 받으시기 바랍니다.
+      </p>
+      <p class="copy">© 2025 루원365한의원. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── 모바일 메뉴 ─────────────────────────── */
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => mobileMenu.classList.toggle('open'));
+  mobileMenu.querySelectorAll('a').forEach(link =>
+    link.addEventListener('click', () => mobileMenu.classList.remove('open'))
+  );
+
+  /* ── 의료진 3D 틸트 ──────────────────────── */
+  document.querySelectorAll('.doctor-tilt-wrap').forEach(wrap => {
+    const card   = wrap.querySelector('.doctor-tilt-card');
+    const initRot = parseFloat(wrap.dataset.initRot) || 0;
+    let active = false;
+
+    const shadowIdle   = '0 8px 32px rgba(42,28,20,0.18)';
+    const shadowActive = '0 40px 70px rgba(42,28,20,0.4), 0 12px 24px rgba(42,28,20,0.25)';
+
+    wrap.addEventListener('mousemove', e => {
+      const rect = wrap.getBoundingClientRect();
+      const cx   = rect.left + rect.width  / 2;
+      const cy   = rect.top  + rect.height / 2;
+      const rx   = -((e.clientY - cy) / (rect.height / 2)) * 14;
+      const ry   =  ((e.clientX - cx) / (rect.width  / 2)) * 14;
+
+      if (!active) {
+        active = true;
+        card.style.transition =
+          'transform 0.07s linear, box-shadow 0.25s ease';
+      }
+      card.style.transform   =
+        `perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.04)`;
+      card.style.boxShadow   = shadowActive;
+    });
+
+    wrap.addEventListener('mouseleave', () => {
+      active = false;
+      card.style.transition =
+        'transform 0.55s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease';
+      card.style.transform  =
+        `perspective(1400px) rotateZ(${initRot}deg)`;
+      card.style.boxShadow  = shadowIdle;
+    });
+  });
+</script>
+</body>
+</html>
