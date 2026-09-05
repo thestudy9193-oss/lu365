@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 런타임에 생성되는 칼럼 업로드 이미지 (배포 환경에서는 Vercel Blob 사용)
+/content/uploads/*
+!/content/uploads/.gitkeep

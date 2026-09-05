@@ -1,134 +1,139 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import { getAllColumnSlugs, getColumnBySlug } from "@/lib/columns";
+import { notFound } from "next/navigation";
+import ColumnCard from "@/components/columns/ColumnCard";
+import EditorActions from "@/components/columns/EditorActions";
+import { formatDate, getAllColumns, getColumnBySlug } from "@/lib/columns";
+import { isEditor } from "@/lib/auth";
+import { siteConfig } from "@/config/site";
+import { articleJsonLd, breadcrumbJsonLd, jsonLdScript } from "@/lib/jsonld";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  return getAllColumnSlugs().map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const column = await getColumnBySlug(slug);
+  const column = await getColumnBySlug(decodeURIComponent(slug));
   if (!column) return {};
   return {
     title: column.title,
-    description: column.summary,
+    description: column.summary || siteConfig.seo.defaultDescription,
+    keywords: [...column.tags, "교통사고한의원", "인천 한의원", column.category],
+    alternates: { canonical: `/columns/${encodeURIComponent(slug)}` },
     openGraph: {
       title: column.title,
       description: column.summary,
       type: "article",
       publishedTime: column.date,
+      images: column.thumbnail ? [column.thumbnail] : [siteConfig.seo.ogImage],
     },
   };
 }
 
 export default async function ColumnDetailPage({ params }: Props) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const column = await getColumnBySlug(slug);
   if (!column) notFound();
 
-  const dateFormatted = column.date
-    ? new Date(column.date).toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "";
+  const authenticated = await isEditor();
+  const related = (await getAllColumns())
+    .filter((c) => c.slug !== slug)
+    .sort((a, b) => (a.category === column.category ? -1 : 0) - (b.category === column.category ? -1 : 0))
+    .slice(0, 3);
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          articleJsonLd({
+            title: column.title,
+            description: column.summary,
+            date: column.date,
+            slug,
+            image: column.thumbnail,
+          })
+        )}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          breadcrumbJsonLd([
+            { name: "홈", path: "/" },
+            { name: "건강 이야기", path: "/columns" },
+            { name: column.title, path: `/columns/${encodeURIComponent(slug)}` },
+          ])
+        )}
+      />
+
       {/* 헤더 */}
-      <section
-        className="py-20 px-4 relative overflow-hidden"
-        style={{ backgroundColor: "#2A1C14" }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 100% at 60% 50%, #4A2C1C 0%, #2A1C14 65%)",
-          }}
-        />
+      <section className="relative pt-28 sm:pt-36 pb-12 sm:pb-16 px-5 sm:px-8 overflow-hidden" style={{ backgroundColor: "#2A1C14" }}>
+        <div className="grain-overlay" />
         <div className="relative z-10 max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Link href="/columns" className="text-xs hover:underline" style={{ color: "#9E8676" }}>
-              ← 칼럼 목록
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <Link href="/columns" className="inline-flex items-center gap-2 text-xs tracking-wide hover:opacity-70" style={{ color: "#C8A882" }}>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              건강 이야기
             </Link>
-            <span style={{ color: "#52392C" }}>·</span>
-            <span
-              className="text-xs font-medium px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: "rgba(200,168,130,0.15)", color: "#C8A882" }}
-            >
-              {column.category}
-            </span>
+            {authenticated && <EditorActions slug={slug} />}
           </div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold leading-snug mb-4"
-            style={{ color: "#FAF6F1", letterSpacing: "-0.3px" }}
-          >
+          <p className="flex items-center gap-3 text-sm" style={{ color: "#C8A882" }}>
+            <span className="font-display">{formatDate(column.date)}</span>
+            <span className="w-px h-3" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />
+            <span>{column.category}</span>
+          </p>
+          <h1 className="mt-4 font-serif-kr text-[1.6rem] sm:text-3xl lg:text-[2.6rem] font-semibold leading-tight text-pretty-ko" style={{ color: "#FAF6F1", letterSpacing: "-0.5px" }}>
             {column.title}
           </h1>
-          <p className="text-xs" style={{ color: "#705C4F" }}>{dateFormatted}</p>
+          {column.summary && (
+            <p className="mt-4 sm:mt-5 text-[14px] sm:text-[15px] leading-relaxed text-pretty-ko" style={{ color: "rgba(250,246,241,0.7)" }}>{column.summary}</p>
+          )}
         </div>
       </section>
 
       {/* 본문 */}
-      <section className="py-14 px-4" style={{ backgroundColor: "#FAF6F1" }}>
+      <article className="px-5 sm:px-8 bg-canvas">
         <div className="max-w-3xl mx-auto">
-          {/* 요약 */}
-          <div
-            className="p-5 mb-8 text-sm leading-relaxed"
-            style={{
-              backgroundColor: "#F0FDFA",
-              borderLeft: "3px solid #0d9488",
-              color: "#2A4A48",
-            }}
-          >
-            {column.summary}
+          {column.thumbnail && (
+            <div className="relative aspect-[16/9] -mt-6 sm:-mt-8 mb-8 sm:mb-12 overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(42,28,20,0.18)" }}>
+              <Image src={column.thumbnail} alt={column.title} fill sizes="768px" className="object-cover" priority unoptimized={column.thumbnail.startsWith("/api/")} />
+            </div>
+          )}
+          <div className={`prose-column text-[15.5px] sm:text-[16px] ${column.thumbnail ? "" : "pt-10 sm:pt-14"}`} dangerouslySetInnerHTML={{ __html: column.content }} />
+
+          {column.tags.length > 0 && (
+            <p className="mt-12 flex flex-wrap gap-2">
+              {column.tags.map((t) => (
+                <span key={t} className="text-xs px-3 py-1.5" style={{ backgroundColor: "#F0E8DE", color: "#705C4F" }}>#{t}</span>
+              ))}
+            </p>
+          )}
+
+          <div className="mt-12 p-6 text-xs leading-relaxed" style={{ backgroundColor: "#F0E8DE", color: "#705C4F" }}>
+            본 글은 건강 정보 제공을 목적으로 작성되었으며 개인의 증상에 대한 진단·치료를 대체하지 않습니다. 증상이 있으신 경우 내원 상담을 권장합니다.
           </div>
 
-          {/* 마크다운 본문 */}
-          <article
-            className="prose-column"
-            dangerouslySetInnerHTML={{ __html: column.content }}
-          />
-
-          {/* 면책 고지 */}
-          <div
-            className="mt-10 p-5 rounded-xl text-xs leading-relaxed"
-            style={{ backgroundColor: "#F0E8DE", color: "#9E8676" }}
-          >
-            <strong style={{ color: "#705C4F" }}>안내</strong> — 본 칼럼의 내용은 일반적인 건강
-            정보 제공을 목적으로 작성되었으며, 개인의 증상에 대한 의료적 진단이나 치료를 대체하지
-            않습니다. 증상이 있거나 건강에 이상이 느껴지시는 경우 의료기관에서 전문 의료진의
-            상담을 받으시기 바랍니다.
-          </div>
-
-          {/* 하단 네비 */}
-          <div
-            className="mt-8 pt-6 flex items-center justify-between"
-            style={{ borderTop: "1px solid rgba(42,28,20,0.1)" }}
-          >
-            <Link
-              href="/columns"
-              className="text-sm font-medium hover:underline"
-              style={{ color: "#9E8676" }}
-            >
-              ← 칼럼 목록
-            </Link>
-            <Link
-              href="/contact"
-              className="text-sm font-semibold hover:underline"
-              style={{ color: "#0d9488" }}
-            >
-              진료 문의하기 →
-            </Link>
+          <div className="mt-9 mb-16 sm:mb-20 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+            <a href={`tel:${siteConfig.phone}`} className="btn-gold flex-1">예약 및 상담 {siteConfig.phoneLabel}</a>
+            <Link href="/columns" className="btn-outline-ink flex-1">목록으로</Link>
           </div>
         </div>
-      </section>
+      </article>
+
+      {related.length > 0 && (
+        <section className="py-14 sm:py-20 px-5 sm:px-8 bg-canvas-soft">
+          <div className="max-w-7xl mx-auto">
+            <p className="font-display italic text-sm mb-2" style={{ color: "#9E8676" }}>More Stories</p>
+            <h2 className="font-serif-kr text-2xl font-semibold mb-8" style={{ color: "#2A1C14" }}>함께 읽어보세요</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-7 sm:gap-8">
+              {related.map((c) => <ColumnCard key={c.slug} column={c} variant="grid" />)}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

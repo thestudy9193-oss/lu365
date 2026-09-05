@@ -1,3 +1,19 @@
+/* ─── 부크크 명조 (상업용 무료) ──────────────────────────── */
+@font-face {
+  font-family: "BookkMyungjo";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/BookkMyungjo-Lt.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "BookkMyungjo";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/BookkMyungjo-Bd.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 
 /* ─── Design Tokens ─────────────────────────────────────── */
@@ -17,6 +33,10 @@
   --color-primary-light:#ccfbf1;
   --color-primary-surface:#f0fdfa;
 
+  /* 폰트 — 디스플레이 세리프(부크크 명조) + 본문 산세리프(Pretendard) */
+  --font-serif:   "BookkMyungjo", "Bookk Myungjo", serif;
+  --font-display: "Fraunces", "BookkMyungjo", Georgia, serif;
+
   /* 전체 border-radius 제거 — 직각 디자인 */
   --radius-sm:   0px;
   --radius:      0px;
@@ -31,7 +51,8 @@
 /* ─── Base ───────────────────────────────────────────────── */
 @layer base {
   * { word-break: keep-all; overflow-wrap: break-word; }
-  html { scroll-behavior: smooth; background: #FAF6F1; }
+  html { scroll-behavior: smooth; background: #FAF6F1; overflow-x: hidden; }
+  body { overflow-x: hidden; }
 
   body {
     font-family: "Pretendard Variable", Pretendard, -apple-system,
@@ -49,6 +70,58 @@
     color: #2A1C14;
   }
 }
+
+/* ─── Editorial Typography ──────────────────────────────── */
+.font-serif-kr { font-family: var(--font-serif); }
+.font-display  { font-family: var(--font-display); }
+
+/* 잡지풍 영문 이탤릭 아이브로우 */
+.eyebrow-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* 섹션 뒤 대형 장식 숫자/한자 */
+.deco-numeral {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 0.8;
+  letter-spacing: -2px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.deco-hanja {
+  position: absolute;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* ─── Surfaces: 종이 질감 + 점격자 ──────────────────────── */
+/* 미세 노이즈(한지 느낌) — 섹션 안 absolute 오버레이로 사용 */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+/* 점 격자 배경 */
+.bg-dotgrid {
+  background-image: radial-gradient(rgba(42,28,20,0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+/* 가는 금색 프레임 */
+.gold-frame { box-shadow: inset 0 0 0 1px rgba(200,168,130,0.45); }
 
 /* ─── Section Header (thin-rule pattern) ────────────────── */
 .section-label {
@@ -245,4 +318,114 @@
 }
 .hero-infobar {
   animation: heroFadeIn 0.6s ease 1.1s both;
+}
+
+/* ─── Hero scroll line ───────────────────────────────────── */
+@keyframes scrollLine {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  50%  { transform: scaleY(1); transform-origin: top; }
+  51%  { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+.scroll-line {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: rgba(250,246,241,0.55);
+  animation: scrollLine 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* ─── Quick menu ─────────────────────────────────────────── */
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 9px;
+  font-size: 9.5px;
+  color: #705C4F;
+  letter-spacing: 0.2px;
+  transition: opacity 150ms;
+}
+.quick-item:hover { opacity: 0.75; }
+
+/* 고정 헤더 아래 앵커 여백 */
+[id] { scroll-margin-top: 64px; }
+@media (min-width: 1024px) { [id] { scroll-margin-top: 80px; } }
+
+/* 칼럼 본문 이미지 */
+.prose-column img { max-width: 100%; height: auto; margin: 1.5rem 0; }
+.prose-column a { color: #0f766e; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ─── 문단 줄바꿈: 어절 단위로 균형있게 ─────────────────── */
+.text-balance-ko {
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.text-pretty-ko {
+  text-wrap: pretty;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ─── 캐러셀 ─────────────────────────────────────────────── */
+.carousel-track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-item { scroll-snap-align: start; flex: 0 0 auto; }
+
+/* ─── 모바일 최적화 ──────────────────────────────────────── */
+/* 터치 기기에서는 hover 로만 보이는 내용을 항상 표시 */
+@media (hover: none) {
+  .hover-reveal { max-height: none !important; opacity: 1 !important; }
+}
+/* 모바일 하단 고정 바 높이만큼 본문 여백 확보 */
+@media (max-width: 1023px) {
+  body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+}
+/* 하단 고정 바 아이템 */
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 9px 4px 8px;
+  font-size: 10.5px;
+  letter-spacing: -0.2px;
+  min-height: 56px;
+}
+
+/* 모바일 버튼: 최소 터치 영역 확보 */
+@media (max-width: 640px) {
+  .btn-primary, .btn-gold, .btn-outline-cream, .btn-outline-ink {
+    padding: 14px 22px;
+    font-size: 14.5px;
+    min-height: 48px;
+  }
+  .section-label span { letter-spacing: 1.8px; }
+}
+/* iOS 입력 확대 방지 */
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px; }
+}
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 히어로 수치 셀 경계선 */
+.hero-stat { border-color: rgba(250, 246, 241, 0.14); border-style: solid; border-width: 0; }
+.hero-stat.border-l { border-left-width: 1px; }
+.hero-stat.border-t { border-top-width: 1px; }
+@media (min-width: 640px) {
+  .hero-stat.sm\:border-t-0 { border-top-width: 0; }
+  .hero-stat.sm\:border-l { border-left-width: 1px; }
+  .hero-stat.sm\:border-l-0 { border-left-width: 0; }
 }

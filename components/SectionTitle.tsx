@@ -21,21 +21,23 @@ export default function SectionTitle({
     <div className={`mb-12 ${center ? "text-center" : ""}`}>
       {en && (
         <div
-          className={`section-label mb-3 ${center ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 mb-3 ${center ? "justify-center" : ""}`}
           style={{ color: subColor }}
         >
-          <span>{en}</span>
+          <span className="w-7 h-px" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />
+          <span className="eyebrow-serif text-sm" style={{ opacity: 0.85 }}>{en}</span>
+          <span className="w-7 h-px" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />
         </div>
       )}
       <h2
-        className="text-2xl sm:text-3xl font-bold"
-        style={{ color: textColor, letterSpacing: "-0.3px" }}
+        className="font-serif-kr text-[1.7rem] sm:text-4xl font-semibold text-balance-ko"
+        style={{ color: textColor, letterSpacing: "-0.5px", lineHeight: 1.25 }}
       >
         {title}
       </h2>
       {subtitle && (
         <p
-          className="mt-3 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto"
+          className={`mt-4 text-sm sm:text-base leading-[1.85] max-w-2xl text-balance-ko ${center ? "mx-auto" : ""}`}
           style={{ color: subtitleColor }}
         >
           {subtitle}

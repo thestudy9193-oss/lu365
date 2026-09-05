@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://루원365.kr/sitemap.xml
