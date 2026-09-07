@@ -299,7 +299,7 @@ export const siteConfig = {
     ogImage: "/og-image.jpg",
     ogImageSquare: "/og-square.jpg",
     // 발급 후 값만 채우면 검색엔진 소유 확인이 완료됩니다.
-    naverVerification: "",
+    naverVerification: "02659d9f39769c9eb3b575ac59be36a42203b8f7",
     googleVerification: "",
   },
 };
