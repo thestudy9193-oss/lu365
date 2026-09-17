@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ColumnCard from "@/components/columns/ColumnCard";
 import EditorActions from "@/components/columns/EditorActions";
-import { formatDate, getAllColumns, getColumnBySlug } from "@/lib/columns";
+import { formatDate, formatPublishAt, getAllColumns, getColumnBySlug } from "@/lib/columns";
 import { isEditor } from "@/lib/auth";
 import { siteConfig } from "@/config/site";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdScript } from "@/lib/jsonld";
@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!column) return {};
   return {
     title: column.title,
+    robots: column.scheduled ? { index: false, follow: false } : undefined,
     description: column.summary || siteConfig.seo.defaultDescription,
     keywords: [...column.tags, "교통사고한의원", "인천 한의원", column.category],
     alternates: { canonical: `/columns/${encodeURIComponent(slug)}` },
@@ -39,6 +40,8 @@ export default async function ColumnDetailPage({ params }: Props) {
   if (!column) notFound();
 
   const authenticated = await isEditor();
+  // 예약 발행 대기 중인 글은 관리자에게만 보인다
+  if (column.scheduled && !authenticated) notFound();
   const related = (await getAllColumns())
     .filter((c) => c.slug !== slug)
     .sort((a, b) => (a.category === column.category ? -1 : 0) - (b.category === column.category ? -1 : 0))
@@ -80,6 +83,11 @@ export default async function ColumnDetailPage({ params }: Props) {
             </Link>
             {authenticated && <EditorActions slug={slug} />}
           </div>
+          {column.scheduled && (
+            <p className="mb-5 px-4 py-3 text-[13px]" style={{ backgroundColor: "rgba(200,168,130,0.16)", color: "#E8D5B8" }}>
+              예약 발행 대기 중 — {formatPublishAt(column.publishAt)}에 자동 공개됩니다. 지금은 관리자에게만 보입니다.
+            </p>
+          )}
           <p className="flex items-center gap-3 text-sm" style={{ color: "#C8A882" }}>
             <span className="font-display">{formatDate(column.date)}</span>
             <span className="w-px h-3" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />

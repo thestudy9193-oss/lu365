@@ -22,10 +22,11 @@ type Props = { searchParams: Promise<{ category?: string }> };
 
 export default async function ColumnsPage({ searchParams }: Props) {
   const { category } = await searchParams;
-  const all = await getAllColumns();
+  const authenticated = await isEditor();
+  const all = await getAllColumns({ includeScheduled: authenticated });
   const categories = Array.from(new Set(all.map((c) => c.category)));
   const columns = category ? all.filter((c) => c.category === category) : all;
-  const authenticated = await isEditor();
+  const scheduledCount = all.filter((c) => c.scheduled).length;
 
   return (
     <>
@@ -64,6 +65,11 @@ export default async function ColumnsPage({ searchParams }: Props) {
       {/* 카테고리 필터 + 목록 */}
       <section className="py-10 sm:py-16 lg:py-20 px-5 sm:px-8 bg-canvas">
         <div className="max-w-7xl mx-auto">
+          {authenticated && scheduledCount > 0 && (
+            <p className="mb-5 px-4 py-3 text-[13px]" style={{ backgroundColor: "#F0E8DE", color: "#705C4F" }}>
+              예약 발행 대기 중인 글 {scheduledCount}건이 있습니다. 관리자에게만 보이며, 예약 시각이 지나면 자동으로 공개됩니다.
+            </p>
+          )}
           <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FilterChip href="/columns" active={!category} label={`전체 ${all.length}`} />
             {categories.map((c) => (

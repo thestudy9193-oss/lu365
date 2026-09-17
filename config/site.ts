@@ -295,7 +295,7 @@ export const siteConfig = {
     titleTemplate: "%s | 루원365한의원 · 인천 교통사고한의원",
     defaultDescription:
       "인천 교통사고한의원 루원365한의원. 자동차보험 적용으로 본인부담금 0원, 1~3인 입원실 운영. 교통사고 후유증, 목·허리 디스크, 추나요법, 체형교정, 다이어트까지 4명의 한의사가 365일 진료합니다. 가정역 6번 출구 401m.",
-    siteUrl: "https://lu365-teal.vercel.app",
+    siteUrl: "https://ru1.kr",
     ogImage: "/og-image.jpg",
     ogImageSquare: "/og-square.jpg",
     // 발급 후 값만 채우면 검색엔진 소유 확인이 완료됩니다.

@@ -31,6 +31,9 @@ export default function ColumnCard({ column, variant = "row", light = false }: P
               <span className="font-display">{formatDate(column.date)}</span>
               <span className="w-px h-3" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />
               <span>{column.category}</span>
+            {column.scheduled && (
+              <span className="px-2 py-0.5 text-[11px]" style={{ backgroundColor: "#C8A882", color: "#2A1C14" }}>예약</span>
+            )}
             </p>
             <h3 className="mt-2 font-serif-kr text-[1.1rem] sm:text-lg font-semibold leading-snug text-pretty-ko group-hover:underline underline-offset-4 decoration-1" style={{ color: titleColor }}>
               {column.title}
@@ -57,6 +60,9 @@ export default function ColumnCard({ column, variant = "row", light = false }: P
             <span className="font-display text-sm">{formatDate(column.date)}</span>
             <span className="w-px h-3" style={{ backgroundColor: "currentColor", opacity: 0.4 }} />
             <span>{column.category}</span>
+          {column.scheduled && (
+            <span className="px-2 py-0.5 text-[11px]" style={{ backgroundColor: "#C8A882", color: "#2A1C14" }}>예약</span>
+          )}
           </p>
           <h3 className="mt-2.5 sm:mt-3 font-serif-kr text-[1.15rem] sm:text-2xl font-semibold leading-snug text-pretty-ko group-hover:underline underline-offset-4 decoration-1" style={{ color: titleColor }}>
             {column.title}

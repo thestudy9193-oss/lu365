@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import ColumnEditor from "@/components/columns/ColumnEditor";
 import { isEditor } from "@/lib/auth";
-import { getColumnBySlug } from "@/lib/columns";
+import { MAX_BODY_IMAGES, getColumnBySlug, toDateTimeLocal } from "@/lib/columns";
 import { siteConfig } from "@/config/site";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +38,7 @@ export default async function WritePage({ searchParams }: Props) {
 
         <ColumnEditor
           categories={siteConfig.columnCategories}
+          maxBodyImages={MAX_BODY_IMAGES}
           initial={
             existing
               ? {
@@ -46,9 +47,11 @@ export default async function WritePage({ searchParams }: Props) {
                   summary: existing.summary,
                   category: existing.category,
                   tags: existing.tags.join(", "),
-                  date: existing.date,
                   body: existing.raw,
                   thumbnail: existing.thumbnail,
+                  images: existing.images,
+                  publishAt: toDateTimeLocal(existing.publishAt),
+                  scheduled: existing.scheduled,
                 }
               : undefined
           }

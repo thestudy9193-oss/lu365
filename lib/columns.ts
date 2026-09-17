@@ -14,6 +14,10 @@ export const uploadsDirectory = path.join(process.cwd(), "content/uploads");
 const BLOB_PREFIX = "columns/";
 const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
+/** 본문에 넣을 수 있는 이미지 장수 (썸네일 1장 + 본문 4장 = 총 5장) */
+export const MAX_BODY_IMAGES = 4;
+export const MAX_IMAGES = MAX_BODY_IMAGES + 1;
+
 export type ColumnMeta = {
   slug: string;
   title: string;
@@ -22,6 +26,12 @@ export type ColumnMeta = {
   date: string;
   tags: string[];
   thumbnail?: string;
+  /** 본문 삽입용 이미지 URL (최대 4장) */
+  images: string[];
+  /** 공개 예정 일시 (ISO8601, KST 오프셋 포함) */
+  publishAt: string;
+  /** 아직 공개 시각이 되지 않은 예약글 */
+  scheduled: boolean;
 };
 
 export type Column = ColumnMeta & {
@@ -34,21 +44,110 @@ function ensureDirs() {
   if (!fs.existsSync(uploadsDirectory)) fs.mkdirSync(uploadsDirectory, { recursive: true });
 }
 
+// ── 예약 발행 시각 (KST 기준) ───────────────────────────────────
+
+const KST_OFFSET = "+09:00";
+
+/** "2026-09-20T14:00" (datetime-local, KST) → "2026-09-20T14:00:00+09:00" */
+export function normalizePublishAt(value: string | undefined, fallbackDate?: string): string {
+  const raw = (value || "").trim();
+  if (raw) {
+    // 이미 오프셋/Z 가 붙어 있으면 그대로 사용
+    if (/[Z+]|-\d{2}:\d{2}$/.test(raw.slice(10))) {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) return raw;
+    }
+    const m = raw.match(/^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+      const [, day, time = "00:00", sec = "00"] = m;
+      return `${day}T${time}:${sec}${KST_OFFSET}`;
+    }
+  }
+  const day = (fallbackDate || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  return `${day}T00:00:00${KST_OFFSET}`;
+}
+
+/** publishAt → "YYYY-MM-DD" (KST 기준 날짜) */
+export function publishDate(publishAt: string): string {
+  const d = new Date(publishAt);
+  if (Number.isNaN(d.getTime())) return publishAt.slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/** publishAt → datetime-local 입력값 "YYYY-MM-DDTHH:mm" (KST) */
+export function toDateTimeLocal(publishAt: string): string {
+  const d = new Date(publishAt);
+  if (Number.isNaN(d.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/** 예약 시각을 사람이 읽는 형태로 — "2026년 9월 20일 오후 2:00" */
+export function formatPublishAt(publishAt: string): string {
+  const d = new Date(publishAt);
+  if (Number.isNaN(d.getTime())) return publishAt;
+  return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+const isScheduled = (publishAt: string) => {
+  const t = new Date(publishAt).getTime();
+  return !Number.isNaN(t) && t > Date.now();
+};
+
+// ── frontmatter ↔ 메타 ─────────────────────────────────────────
+
 function toMeta(slug: string, data: Record<string, unknown>): ColumnMeta {
+  const date = String(data.date ?? "");
+  const publishAt = normalizePublishAt(data.publishAt ? String(data.publishAt) : undefined, date);
   return {
     slug,
     title: String(data.title ?? ""),
     summary: String(data.summary ?? ""),
     category: String(data.category ?? "일반"),
-    date: String(data.date ?? ""),
+    date: date || publishDate(publishAt),
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     thumbnail: data.thumbnail ? String(data.thumbnail) : undefined,
+    images: Array.isArray(data.images) ? data.images.map(String).slice(0, MAX_BODY_IMAGES) : [],
+    publishAt,
+    scheduled: isScheduled(publishAt),
   };
 }
 
 const isValidSlug = (slug: string) => /^[\p{L}\p{N}-]+$/u.test(slug);
 
 // ── 원본 md 읽기/쓰기 (저장 방식별) ─────────────────────────────
+
+/** Blob 저장소가 정지(billing 미활성)되면 CDN이 403 + "Your store is blocked" 본문을 돌려준다 */
+async function fetchBlobText(url: string): Promise<string> {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(
+      `Vercel Blob 저장소에 접근할 수 없습니다 (HTTP ${res.status}). Vercel 대시보드에서 Blob 스토어 상태를 확인해 주세요.`
+    );
+  }
+  return res.text();
+}
 
 async function readAllRaw(): Promise<{ slug: string; file: string }[]> {
   if (useBlob()) {
@@ -61,11 +160,15 @@ async function readAllRaw(): Promise<{ slug: string; file: string }[]> {
           .filter((b) => b.pathname.endsWith(".md"))
           .map(async (b) => {
             const slug = decodeURIComponent(b.pathname.slice(BLOB_PREFIX.length, -3));
-            const file = await (await fetch(b.url, { cache: "no-store" })).text();
-            return { slug, file };
+            try {
+              return { slug, file: await fetchBlobText(b.url) };
+            } catch (e) {
+              console.error(`[columns] ${slug} 읽기 실패:`, e);
+              return null;
+            }
           })
       );
-      out.push(...items);
+      out.push(...items.filter((x): x is { slug: string; file: string } => x !== null));
       cursor = res.hasMore ? res.cursor : undefined;
     } while (cursor);
     return out;
@@ -83,14 +186,19 @@ async function readRaw(slug: string): Promise<string | null> {
     const res = await list({ prefix: `${BLOB_PREFIX}${slug}.md`, limit: 1 });
     const b = res.blobs.find((x) => x.pathname === `${BLOB_PREFIX}${slug}.md`);
     if (!b) return null;
-    return (await fetch(b.url, { cache: "no-store" })).text();
+    return fetchBlobText(b.url);
   }
   const fullPath = path.join(columnsDirectory, `${slug}.md`);
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, "utf8") : null;
 }
 
 async function existsRaw(slug: string): Promise<boolean> {
-  return (await readRaw(slug)) !== null;
+  if (!isValidSlug(slug)) return false;
+  if (useBlob()) {
+    const res = await list({ prefix: `${BLOB_PREFIX}${slug}.md`, limit: 1 });
+    return res.blobs.some((x) => x.pathname === `${BLOB_PREFIX}${slug}.md`);
+  }
+  return fs.existsSync(path.join(columnsDirectory, `${slug}.md`));
 }
 
 async function writeRaw(slug: string, file: string) {
@@ -124,10 +232,16 @@ async function removeRaw(slug: string): Promise<boolean> {
 
 // ── 공개 API ────────────────────────────────────────────────────
 
-export async function getAllColumns(): Promise<ColumnMeta[]> {
+type ListOptions = {
+  /** 관리자 화면에서만 true — 예약글(공개 시각 전)도 함께 반환 */
+  includeScheduled?: boolean;
+};
+
+export async function getAllColumns(options: ListOptions = {}): Promise<ColumnMeta[]> {
   const raws = await readAllRaw();
   const columns = raws.map(({ slug, file }) => toMeta(slug, matter(file).data));
-  return columns.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const visible = options.includeScheduled ? columns : columns.filter((c) => !c.scheduled);
+  return visible.sort((a, b) => new Date(b.publishAt).getTime() - new Date(a.publishAt).getTime());
 }
 
 export async function getColumnBySlug(slug: string): Promise<Column | null> {
@@ -157,18 +271,24 @@ export type NewColumnInput = {
   category: string;
   tags: string[];
   body: string;
-  thumbnail?: string;
-  date?: string;
+  /** 새 URL, 빈 문자열/null = 썸네일 제거, undefined = 기존 유지 */
+  thumbnail?: string | null;
+  images?: string[];
+  /** datetime-local("YYYY-MM-DDTHH:mm", KST) 또는 ISO8601 */
+  publishAt?: string;
 };
 
-function serialize(input: NewColumnInput, date: string, thumbnail?: string) {
+function serialize(input: NewColumnInput, publishAt: string, thumbnail?: string) {
+  const images = (input.images ?? []).slice(0, MAX_BODY_IMAGES);
   return matter.stringify(input.body.replace(/\r\n/g, "\n").trim() + "\n", {
     title: input.title,
     summary: input.summary,
     category: input.category,
-    date,
+    date: publishDate(publishAt),
+    publishAt,
     tags: input.tags,
     ...(thumbnail ? { thumbnail } : {}),
+    ...(images.length ? { images } : {}),
   });
 }
 
@@ -177,19 +297,44 @@ export async function createColumn(input: NewColumnInput): Promise<ColumnMeta> {
   let slug = base;
   let i = 2;
   while (await existsRaw(slug)) slug = `${base}-${i++}`;
-  const date = input.date || new Date().toISOString().slice(0, 10);
-  await writeRaw(slug, serialize(input, date, input.thumbnail));
-  return { slug, title: input.title, summary: input.summary, category: input.category, date, tags: input.tags, thumbnail: input.thumbnail };
+  const publishAt = normalizePublishAt(input.publishAt);
+  const thumbnail = input.thumbnail || undefined;
+  await writeRaw(slug, serialize(input, publishAt, thumbnail));
+  return {
+    slug,
+    title: input.title,
+    summary: input.summary,
+    category: input.category,
+    date: publishDate(publishAt),
+    tags: input.tags,
+    thumbnail,
+    images: (input.images ?? []).slice(0, MAX_BODY_IMAGES),
+    publishAt,
+    scheduled: isScheduled(publishAt),
+  };
 }
 
 export async function updateColumn(slug: string, input: NewColumnInput): Promise<ColumnMeta | null> {
   const existing = await readRaw(slug);
   if (existing === null) return null;
   const { data } = matter(existing);
-  const date = input.date || String(data.date ?? new Date().toISOString().slice(0, 10));
-  const thumbnail = input.thumbnail ?? (data.thumbnail ? String(data.thumbnail) : undefined);
-  await writeRaw(slug, serialize(input, date, thumbnail));
-  return { slug, title: input.title, summary: input.summary, category: input.category, date, tags: input.tags, thumbnail };
+  const previous = toMeta(slug, data);
+  const publishAt = input.publishAt ? normalizePublishAt(input.publishAt) : previous.publishAt;
+  const thumbnail = input.thumbnail === undefined ? previous.thumbnail : input.thumbnail || undefined;
+  const images = input.images ?? previous.images;
+  await writeRaw(slug, serialize({ ...input, images }, publishAt, thumbnail));
+  return {
+    slug,
+    title: input.title,
+    summary: input.summary,
+    category: input.category,
+    date: publishDate(publishAt),
+    tags: input.tags,
+    thumbnail,
+    images: images.slice(0, MAX_BODY_IMAGES),
+    publishAt,
+    scheduled: isScheduled(publishAt),
+  };
 }
 
 export async function deleteColumn(slug: string): Promise<boolean> {
