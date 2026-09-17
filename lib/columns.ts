@@ -184,7 +184,14 @@ async function fetchBlobText(pathname: string, version?: string): Promise<string
 }
 
 async function readIndex(): Promise<IndexEntry[] | null> {
-  const raw = await fetchBlobText(INDEX_PATH);
+  let raw: string | null;
+  try {
+    raw = await fetchBlobText(INDEX_PATH);
+  } catch (e) {
+    // 스토어 정지·네트워크 오류 등 — 페이지는 비우고 살려 둔다
+    console.error("[columns] index.json 읽기 실패:", e);
+    return null;
+  }
   if (raw === null) return null;
   try {
     const parsed = JSON.parse(raw);
@@ -300,7 +307,12 @@ async function readRaw(slug: string): Promise<string | null> {
   if (useBlob()) {
     const entries = await readIndexOrHeal();
     const version = entries?.find((e) => e.slug === slug)?.updatedAt;
-    return fetchBlobText(`${BLOB_PREFIX}${slug}.md`, version);
+    try {
+      return await fetchBlobText(`${BLOB_PREFIX}${slug}.md`, version);
+    } catch (e) {
+      console.error(`[columns] ${slug} 읽기 실패:`, e);
+      return null;
+    }
   }
   const fullPath = path.join(columnsDirectory, `${slug}.md`);
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, "utf8") : null;
@@ -312,7 +324,12 @@ async function existsRaw(slug: string): Promise<boolean> {
     const entries = await readIndexOrHeal();
     if (entries?.some((e) => e.slug === slug)) return true;
     // 색인에 없더라도 실제 파일이 있을 수 있으므로 URL 로 한 번 더 확인
-    return (await fetchBlobText(`${BLOB_PREFIX}${slug}.md`)) !== null;
+    try {
+      return (await fetchBlobText(`${BLOB_PREFIX}${slug}.md`)) !== null;
+    } catch (e) {
+      console.error(`[columns] ${slug} 확인 실패:`, e);
+      return false;
+    }
   }
   return fs.existsSync(path.join(columnsDirectory, `${slug}.md`));
 }
