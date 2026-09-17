@@ -136,57 +136,171 @@ function toMeta(slug: string, data: Record<string, unknown>): ColumnMeta {
 
 const isValidSlug = (slug: string) => /^[\p{L}\p{N}-]+$/u.test(slug);
 
-// ── 원본 md 읽기/쓰기 (저장 방식별) ─────────────────────────────
+// ── Blob 접근 (list() 없이 고정 URL 로 직접 읽기) ───────────────
+//
+// Vercel Blob 의 advanced operation(list·put·del·copy)은 Hobby 플랜에서 월 2,000회뿐이다.
+// 예전 구현은 페이지를 열 때마다 list() 를 불러 방문 1회당 1~2회를 소모했고, 그 때문에
+// 스토어가 한도 초과로 정지됐다. 이제 목록은 columns/index.json 한 파일로 관리하고
+// 본문은 공개 URL 로 직접 fetch 한다 — 읽기는 데이터 전송(월 10GB)만 쓰고
+// advanced operation 은 글을 쓸 때만(글 1건당 2회) 소모한다.
 
-/** Blob 저장소가 정지(billing 미활성)되면 CDN이 403 + "Your store is blocked" 본문을 돌려준다 */
-async function fetchBlobText(url: string): Promise<string> {
-  const res = await fetch(url, { cache: "no-store" });
+const INDEX_PATH = "columns/index.json";
+
+type IndexEntry = {
+  slug: string;
+  /** 마지막 저장 시각 — CDN 캐시 우회용 쿼리스트링에 사용 */
+  updatedAt: string;
+  /** frontmatter 원본 */
+  data: Record<string, unknown>;
+};
+
+/** 공개 블롭 호스트 — 토큰(vercel_blob_rw_<storeId>_<secret>)에서 유도 */
+function blobBase(): string {
+  const explicit = process.env.BLOB_BASE_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const storeId = (process.env.BLOB_READ_WRITE_TOKEN || "").split("_")[3];
+  if (!storeId) throw new Error("BLOB_READ_WRITE_TOKEN 형식을 해석할 수 없습니다. BLOB_BASE_URL 을 지정해 주세요.");
+  return `https://${storeId.toLowerCase()}.public.blob.vercel-storage.com`;
+}
+
+function blobUrl(pathname: string, version?: string): string {
+  const encoded = pathname.split("/").map(encodeURIComponent).join("/");
+  return `${blobBase()}/${encoded}${version ? `?v=${encodeURIComponent(version)}` : ""}`;
+}
+
+/**
+ * 공개 URL 직접 fetch — 블롭 operation 을 소모하지 않는다.
+ * 없으면 null, 스토어 정지(403) 등 그 외 실패는 예외.
+ */
+async function fetchBlobText(pathname: string, version?: string): Promise<string | null> {
+  const res = await fetch(blobUrl(pathname, version), { cache: "no-store" });
+  if (res.status === 404) return null;
   if (!res.ok) {
     throw new Error(
-      `Vercel Blob 저장소에 접근할 수 없습니다 (HTTP ${res.status}). Vercel 대시보드에서 Blob 스토어 상태를 확인해 주세요.`
+      `Vercel Blob 저장소에 접근할 수 없습니다 (HTTP ${res.status}). Vercel 대시보드에서 Blob 스토어 상태(사용량 한도)를 확인해 주세요.`
     );
   }
   return res.text();
 }
 
-async function readAllRaw(): Promise<{ slug: string; file: string }[]> {
+async function readIndex(): Promise<IndexEntry[] | null> {
+  const raw = await fetchBlobText(INDEX_PATH);
+  if (raw === null) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.entries) ? (parsed.entries as IndexEntry[]) : null;
+  } catch {
+    console.error("[columns] index.json 을 해석할 수 없습니다. 재색인이 필요합니다.");
+    return null;
+  }
+}
+
+/** advanced operation 1회 */
+async function writeIndex(entries: IndexEntry[]) {
+  await put(INDEX_PATH, JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), entries }, null, 0), {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json; charset=utf-8",
+    cacheControlMaxAge: 60,
+  });
+}
+
+async function upsertIndex(slug: string, file: string) {
+  const entries = (await readIndex()) ?? [];
+  const entry: IndexEntry = { slug, updatedAt: new Date().toISOString(), data: matter(file).data };
+  const i = entries.findIndex((e) => e.slug === slug);
+  if (i >= 0) entries[i] = entry;
+  else entries.push(entry);
+  await writeIndex(entries);
+}
+
+/**
+ * index.json 이 없으면 list() 로 한 번만 자동 재생성한다.
+ * (스토어 정지가 풀리는 순간 첫 방문에서 스스로 복구되도록 — 실패하면 5분간 재시도 안 함)
+ */
+let reindexAttemptedAt = 0;
+let reindexInFlight: Promise<IndexEntry[] | null> | null = null;
+
+async function readIndexOrHeal(): Promise<IndexEntry[] | null> {
+  const entries = await readIndex();
+  if (entries) return entries;
+  if (reindexInFlight) return reindexInFlight;
+  if (Date.now() - reindexAttemptedAt < 5 * 60 * 1000) return null;
+  reindexAttemptedAt = Date.now();
+  reindexInFlight = (async () => {
+    try {
+      console.warn("[columns] index.json 이 없어 자동 재색인을 시도합니다.");
+      await reindexColumns();
+      return await readIndex();
+    } catch (e) {
+      console.error("[columns] 자동 재색인 실패:", e);
+      return null;
+    } finally {
+      reindexInFlight = null;
+    }
+  })();
+  return reindexInFlight;
+}
+
+async function removeFromIndex(slug: string) {
+  const entries = await readIndex();
+  if (!entries) return;
+  await writeIndex(entries.filter((e) => e.slug !== slug));
+}
+
+/**
+ * list() 로 index.json 을 한 번에 다시 만든다 (advanced operation 사용).
+ * 스토어를 새로 연결했거나 색인이 깨졌을 때 관리자가 1회만 실행한다.
+ */
+export async function reindexColumns(): Promise<{ count: number }> {
+  if (!useBlob()) return { count: 0 };
+  const entries: IndexEntry[] = [];
+  let cursor: string | undefined;
+  do {
+    const res = await list({ prefix: BLOB_PREFIX, cursor, limit: 1000 });
+    for (const b of res.blobs) {
+      if (!b.pathname.endsWith(".md")) continue;
+      const slug = decodeURIComponent(b.pathname.slice(BLOB_PREFIX.length, -3));
+      const file = await fetchBlobText(b.pathname);
+      if (file === null) continue;
+      entries.push({ slug, updatedAt: new Date(b.uploadedAt).toISOString(), data: matter(file).data });
+    }
+    cursor = res.hasMore ? res.cursor : undefined;
+  } while (cursor);
+  await writeIndex(entries);
+  return { count: entries.length };
+}
+
+// ── 원본 md 읽기/쓰기 (저장 방식별) ─────────────────────────────
+
+/** 목록용 메타 — blob 모드에서는 index.json 하나만 읽는다 (본문 fetch 없음) */
+async function readAllMeta(): Promise<ColumnMeta[]> {
   if (useBlob()) {
-    const out: { slug: string; file: string }[] = [];
-    let cursor: string | undefined;
-    do {
-      const res = await list({ prefix: BLOB_PREFIX, cursor, limit: 1000 });
-      const items = await Promise.all(
-        res.blobs
-          .filter((b) => b.pathname.endsWith(".md"))
-          .map(async (b) => {
-            const slug = decodeURIComponent(b.pathname.slice(BLOB_PREFIX.length, -3));
-            try {
-              return { slug, file: await fetchBlobText(b.url) };
-            } catch (e) {
-              console.error(`[columns] ${slug} 읽기 실패:`, e);
-              return null;
-            }
-          })
-      );
-      out.push(...items.filter((x): x is { slug: string; file: string } => x !== null));
-      cursor = res.hasMore ? res.cursor : undefined;
-    } while (cursor);
-    return out;
+    const entries = await readIndexOrHeal();
+    if (!entries) {
+      console.error("[columns] columns/index.json 을 읽을 수 없습니다. /api/columns/reindex 로 재색인해 주세요.");
+      return [];
+    }
+    return entries.map((e) => toMeta(e.slug, e.data));
   }
   if (!fs.existsSync(columnsDirectory)) return [];
   return fs
     .readdirSync(columnsDirectory)
     .filter((f) => f.endsWith(".md"))
-    .map((f) => ({ slug: f.replace(/\.md$/, ""), file: fs.readFileSync(path.join(columnsDirectory, f), "utf8") }));
+    .map((f) => {
+      const slug = f.replace(/\.md$/, "");
+      const file = fs.readFileSync(path.join(columnsDirectory, f), "utf8");
+      return toMeta(slug, matter(file).data);
+    });
 }
 
 async function readRaw(slug: string): Promise<string | null> {
   if (!isValidSlug(slug)) return null;
   if (useBlob()) {
-    const res = await list({ prefix: `${BLOB_PREFIX}${slug}.md`, limit: 1 });
-    const b = res.blobs.find((x) => x.pathname === `${BLOB_PREFIX}${slug}.md`);
-    if (!b) return null;
-    return fetchBlobText(b.url);
+    const entries = await readIndexOrHeal();
+    const version = entries?.find((e) => e.slug === slug)?.updatedAt;
+    return fetchBlobText(`${BLOB_PREFIX}${slug}.md`, version);
   }
   const fullPath = path.join(columnsDirectory, `${slug}.md`);
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, "utf8") : null;
@@ -195,12 +309,15 @@ async function readRaw(slug: string): Promise<string | null> {
 async function existsRaw(slug: string): Promise<boolean> {
   if (!isValidSlug(slug)) return false;
   if (useBlob()) {
-    const res = await list({ prefix: `${BLOB_PREFIX}${slug}.md`, limit: 1 });
-    return res.blobs.some((x) => x.pathname === `${BLOB_PREFIX}${slug}.md`);
+    const entries = await readIndexOrHeal();
+    if (entries?.some((e) => e.slug === slug)) return true;
+    // 색인에 없더라도 실제 파일이 있을 수 있으므로 URL 로 한 번 더 확인
+    return (await fetchBlobText(`${BLOB_PREFIX}${slug}.md`)) !== null;
   }
   return fs.existsSync(path.join(columnsDirectory, `${slug}.md`));
 }
 
+/** advanced operation 2회 (md 1 + index 1) */
 async function writeRaw(slug: string, file: string) {
   if (useBlob()) {
     await put(`${BLOB_PREFIX}${slug}.md`, file, {
@@ -210,6 +327,7 @@ async function writeRaw(slug: string, file: string) {
       contentType: "text/markdown; charset=utf-8",
       cacheControlMaxAge: 60,
     });
+    await upsertIndex(slug, file);
     return;
   }
   ensureDirs();
@@ -218,10 +336,9 @@ async function writeRaw(slug: string, file: string) {
 
 async function removeRaw(slug: string): Promise<boolean> {
   if (useBlob()) {
-    const res = await list({ prefix: `${BLOB_PREFIX}${slug}.md`, limit: 1 });
-    const b = res.blobs.find((x) => x.pathname === `${BLOB_PREFIX}${slug}.md`);
-    if (!b) return false;
-    await del(b.url);
+    if (!(await existsRaw(slug))) return false;
+    await del(`${BLOB_PREFIX}${slug}.md`);
+    await removeFromIndex(slug);
     return true;
   }
   const fullPath = path.join(columnsDirectory, `${slug}.md`);
@@ -238,8 +355,7 @@ type ListOptions = {
 };
 
 export async function getAllColumns(options: ListOptions = {}): Promise<ColumnMeta[]> {
-  const raws = await readAllRaw();
-  const columns = raws.map(({ slug, file }) => toMeta(slug, matter(file).data));
+  const columns = await readAllMeta();
   const visible = options.includeScheduled ? columns : columns.filter((c) => !c.scheduled);
   return visible.sort((a, b) => new Date(b.publishAt).getTime() - new Date(a.publishAt).getTime());
 }
