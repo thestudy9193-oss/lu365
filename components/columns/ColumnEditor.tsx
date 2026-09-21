@@ -36,6 +36,29 @@ const TEMPLATE = `## 이런 증상, 그냥 두어도 될까요?
 > 치료 결과는 개인의 체질과 상태에 따라 차이가 있을 수 있습니다.
 `;
 
+/** 본문 목표 분량 (공백 제외) */
+const TARGET_CHARS = 1500;
+
+/** 글자색 팔레트 — 본문에 <span style="color:…"> 로 들어간다 */
+const TEXT_COLORS = [
+  { name: "포인트 그린", value: "#0f766e" },
+  { name: "딥 브라운", value: "#2A1C14" },
+  { name: "베이지 브라운", value: "#9E8676" },
+  { name: "강조 레드", value: "#C0392B" },
+  { name: "차분한 블루", value: "#2C5F8D" },
+];
+
+/** 형광펜 팔레트 — <mark style="background:…"> */
+const HIGHLIGHTS = [
+  { name: "노랑", value: "#FFF3BF" },
+  { name: "민트", value: "#CCFBF1" },
+  { name: "핑크", value: "#FFE3E3" },
+  { name: "베이지", value: "#F0E8DE" },
+];
+
+/** 줄머리 표식(제목·인용구·목록)을 걷어내기 위한 패턴 */
+const LINE_MARK = /^(#{1,6}\s+|>\s+|-\s+|\d+\.\s+)/;
+
 /** 현재 시각(KST) → datetime-local 입력값 */
 function nowLocalKst(): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -49,6 +72,25 @@ function nowLocalKst(): string {
   }).formatToParts(new Date());
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/** 서식 버튼 하나 — 클릭해도 폼이 제출되지 않도록 type="button" 고정 */
+function ToolButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      onClick={onClick}
+      className="text-[12px] px-2.5 h-6 transition-colors hover:bg-[#F0E8DE]"
+      style={{ border: "1px solid rgba(42,28,20,0.15)", backgroundColor: "#fff", color: "#2A1C14" }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <span className="w-px h-5 mx-1" style={{ backgroundColor: "rgba(42,28,20,0.12)" }} />;
 }
 
 export default function ColumnEditor({ categories, initial, maxBodyImages }: Props) {
@@ -69,6 +111,9 @@ export default function ColumnEditor({ categories, initial, maxBodyImages }: Pro
   const [saving, setSaving] = useState(false);
 
   const html = useMemo(() => marked.parse(body) as string, [body]);
+  /** 공백 제외 글자수 — 네이버 블로그 기준과 동일하게 센다 */
+  const charCount = useMemo(() => body.replace(/\s/g, "").length, [body]);
+  const progress = Math.min(100, Math.round((charCount / TARGET_CHARS) * 100));
 
   const upload = async (file: File): Promise<string | null> => {
     const fd = new FormData();
@@ -110,6 +155,60 @@ export default function ColumnEditor({ categories, initial, maxBodyImages }: Pro
     if (files.length > room) setError(`본문 이미지는 최대 ${maxBodyImages}장까지라 ${picked.length}장만 등록했습니다.`);
     setUploading(null);
   };
+
+  // ── 본문 서식 도구 ──────────────────────────────────────────
+  //
+  // textarea 를 직접 편집한다. 선택 영역이 있으면 그 글에 적용하고,
+  // 없으면 자리표시 문구를 넣은 뒤 그 부분을 선택 상태로 돌려준다.
+
+  const edit = (make: (sel: { start: number; end: number }) => { text: string; start: number; end: number }) => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const next = make({ start: el.selectionStart ?? body.length, end: el.selectionEnd ?? body.length });
+    setBody(next.text);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(next.start, next.end);
+    });
+  };
+
+  /** 선택 영역을 before/after 로 감싼다 (굵게·색·형광펜) */
+  const wrap = (before: string, after: string, placeholder = "내용") =>
+    edit(({ start, end }) => {
+      const picked = body.slice(start, end) || placeholder;
+      const from = start + before.length;
+      return {
+        text: body.slice(0, start) + before + picked + after + body.slice(end),
+        start: from,
+        end: from + picked.length,
+      };
+    });
+
+  /** 선택한 줄들의 머리에 표식을 붙인다 — 이미 같은 표식이면 해제(토글) */
+  const prefixLines = (mark: string, placeholder = "내용") =>
+    edit(({ start, end }) => {
+      const lineStart = body.lastIndexOf("\n", start - 1) + 1;
+      const found = body.indexOf("\n", end);
+      const lineEnd = found === -1 ? body.length : found;
+      const lines = (body.slice(lineStart, lineEnd) || placeholder).split("\n");
+      const on = lines.every((l) => l.startsWith(mark));
+      const next = lines
+        .map((l) => (on ? l.slice(mark.length) : mark + l.replace(LINE_MARK, "")))
+        .join("\n");
+      return {
+        text: body.slice(0, lineStart) + next + body.slice(lineEnd),
+        start: lineStart,
+        end: lineStart + next.length,
+      };
+    });
+
+  /** 커서 자리에 블록을 통째로 넣는다 (구분선 등) */
+  const insertBlock = (block: string) =>
+    edit(({ start, end }) => {
+      const snippet = `\n\n${block}\n\n`;
+      const pos = start + snippet.length;
+      return { text: body.slice(0, start) + snippet + body.slice(end), start: pos, end: pos };
+    });
 
   /** 커서 위치에 마크다운 이미지 삽입 */
   const insertImage = (url: string) => {
@@ -322,8 +421,66 @@ export default function ColumnEditor({ categories, initial, maxBodyImages }: Pro
               {t === "write" ? "작성" : "미리보기"}
             </button>
           ))}
-          <span className="ml-auto text-xs" style={{ color: "#9E8676" }}>{body.length.toLocaleString()}자</span>
+          <span className="ml-auto text-xs" style={{ color: charCount >= TARGET_CHARS ? "#0f766e" : "#9E8676" }}>
+            공백 제외 <strong>{charCount.toLocaleString()}</strong>자 / 목표 {TARGET_CHARS.toLocaleString()}자
+          </span>
         </div>
+
+        {/* 목표 분량 진행바 */}
+        <div className="h-1 mb-3" style={{ backgroundColor: "#F0E8DE" }}>
+          <div
+            className="h-full transition-all duration-300"
+            style={{ width: `${progress}%`, backgroundColor: charCount >= TARGET_CHARS ? "#0f766e" : "#C8A882" }}
+          />
+        </div>
+
+        {tab === "write" && (
+          <div className="flex flex-wrap items-center gap-1 mb-2 p-2" style={{ border: "1px solid rgba(42,28,20,0.15)", backgroundColor: "#FAF6F1" }}>
+            <ToolButton label="큰 소제목" onClick={() => prefixLines("## ", "소제목")}>H2</ToolButton>
+            <ToolButton label="작은 소제목" onClick={() => prefixLines("### ", "소제목")}>H3</ToolButton>
+            <Divider />
+            <ToolButton label="굵게" onClick={() => wrap("**", "**", "굵은 글씨")}>
+              <strong>B</strong>
+            </ToolButton>
+            <ToolButton label="기울임" onClick={() => wrap("*", "*", "기울인 글씨")}>
+              <em>I</em>
+            </ToolButton>
+            <Divider />
+            <ToolButton label="인용구" onClick={() => prefixLines("> ", "인용할 문장")}>❝ 인용구</ToolButton>
+            <ToolButton label="목록" onClick={() => prefixLines("- ", "항목")}>• 목록</ToolButton>
+            <ToolButton label="구분선" onClick={() => insertBlock("---")}>— 구분선</ToolButton>
+            <Divider />
+
+            {/* 글자색 */}
+            <span className="text-[11px] px-1" style={{ color: "#9E8676" }}>글자색</span>
+            {TEXT_COLORS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                title={`글자색 — ${c.name}`}
+                onClick={() => wrap(`<span style="color:${c.value}">`, "</span>", "색을 넣을 글")}
+                className="w-6 h-6 grid place-items-center text-[13px] font-bold"
+                style={{ border: "1px solid rgba(42,28,20,0.15)", backgroundColor: "#fff", color: c.value }}
+              >
+                가
+              </button>
+            ))}
+            <Divider />
+
+            {/* 형광펜 */}
+            <span className="text-[11px] px-1" style={{ color: "#9E8676" }}>형광펜</span>
+            {HIGHLIGHTS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                title={`형광펜 — ${c.name}`}
+                onClick={() => wrap(`<mark style="background:${c.value}">`, "</mark>", "강조할 글")}
+                className="w-6 h-6"
+                style={{ border: "1px solid rgba(42,28,20,0.15)", backgroundColor: c.value }}
+              />
+            ))}
+          </div>
+        )}
 
         {tab === "write" ? (
           <textarea

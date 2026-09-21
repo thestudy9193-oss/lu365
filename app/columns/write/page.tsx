@@ -30,9 +30,8 @@ export default async function WritePage({ searchParams }: Props) {
             {existing ? "글 수정" : "새 글 작성"}
           </h1>
           <p className="text-sm mt-2" style={{ color: "#705C4F" }}>
-            본문은 마크다운으로 작성합니다. <code className="text-xs px-1.5 py-0.5" style={{ backgroundColor: "#F0E8DE" }}>## 소제목</code>,{" "}
-            <code className="text-xs px-1.5 py-0.5" style={{ backgroundColor: "#F0E8DE" }}>**강조**</code>,{" "}
-            <code className="text-xs px-1.5 py-0.5" style={{ backgroundColor: "#F0E8DE" }}>- 목록</code> 을 사용할 수 있습니다.
+            본문 입력창 위의 <strong>서식 도구</strong>로 소제목 · 인용구 · 목록 · 글자색 · 형광펜을 넣을 수 있습니다.
+            글을 드래그해서 선택한 뒤 버튼을 누르면 그 부분에 적용됩니다. 목표 분량은 공백 제외 1,500자입니다.
           </p>
         </div>
 

@@ -281,6 +281,12 @@
   margin: 1.5rem 0;
   color: #705C4F;
 }
+/* 편집기 형광펜 — <mark style="background:…"> */
+.prose-column mark {
+  padding: 0.05em 0.2em;
+  border-radius: 2px;
+  color: inherit;
+}
 .prose-column hr {
   border: none; border-top: 1px solid rgba(42,28,20,.1);
   margin: 2rem 0;
