@@ -205,6 +205,27 @@ export function columnFaqJsonLd(slug: string, qa: { q: string; a: string }[]) {
   };
 }
 
+/**
+ * 네이버 캐러셀 (ListItem) — 검색결과에 카드 목록으로 노출되는 구조화 데이터.
+ * 네이버 가이드: image 만 필수, 1페이지에 1개 목록, 항목·이미지 중복 금지,
+ * 로고나 기본 이미지는 쓰지 않는다. url 은 절대 경로로 넣는다.
+ * https://searchadvisor.naver.com/guide/structured-data-carousel
+ */
+export function carouselJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${url}/#carousel`,
+    itemListElement: siteConfig.carousel.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.name,
+      image: `${url}${c.image}`,
+      url: `${url}${c.path}`,
+    })),
+  };
+}
+
 export function jsonLdScript(data: object) {
   return { __html: JSON.stringify(data) };
 }

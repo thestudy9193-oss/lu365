@@ -290,6 +290,16 @@ export const siteConfig = {
     },
   ],
 
+  // 네이버 캐러셀(ListItem) 카드 — 검색결과 캐러셀 노출용
+  // 가이드상 로고·기본 이미지는 쓰지 않고, 항목을 잘 나타내는 실제 사진만 쓴다.
+  carousel: [
+    { name: "교통사고 본인부담금 0원", image: "/carousel/01-accident.jpg", path: "/#clinics" },
+    { name: "1~3인 입원실 집중 입원치료", image: "/carousel/02-inpatient.jpg", path: "/#inpatient" },
+    { name: "추나요법 척추·관절 교정", image: "/carousel/03-chuna.jpg", path: "/#difference" },
+    { name: "한의사 4인 상주 1:1 책임진료", image: "/carousel/04-doctors.jpg", path: "/#doctors" },
+    { name: "365일 연중무휴 · 평일 밤 9시까지", image: "/carousel/05-hours.jpg", path: "/#info" },
+  ],
+
   seo: {
     defaultTitle: "루원365한의원 - 교통사고한의원, 1~3인 입원실 | 인천 서구 가정동",
     titleTemplate: "%s | 루원365한의원 · 인천 교통사고한의원",

@@ -10,7 +10,7 @@ import StoriesSection from "@/components/home/StoriesSection";
 import FaqSection from "@/components/home/FaqSection";
 import { getAllColumns } from "@/lib/columns";
 import { siteConfig } from "@/config/site";
-import { clinicJsonLd, faqJsonLd, jsonLdScript, websiteJsonLd } from "@/lib/jsonld";
+import { carouselJsonLd, clinicJsonLd, faqJsonLd, jsonLdScript, websiteJsonLd } from "@/lib/jsonld";
 
 // 칼럼이 런타임에 추가되므로 요청 시 렌더링
 export const dynamic = "force-dynamic";
@@ -29,6 +29,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(clinicJsonLd())} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(faqJsonLd())} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(websiteJsonLd())} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(carouselJsonLd())} />
 
       <Hero />
       <ClinicsSection />
