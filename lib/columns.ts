@@ -3,15 +3,23 @@ import path from "path";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { del, list, put } from "@vercel/blob";
+import { commitFiles, existsInRepo, isEphemeral, readFromRepo, useGithub } from "@/lib/githubStore";
 
 /**
- * 칼럼 저장소
- * - BLOB_READ_WRITE_TOKEN 이 있으면(Vercel 배포) Vercel Blob에 저장
- * - 없으면(로컬 개발) content/columns, content/uploads 파일로 저장
+ * 칼럼 저장소 — 우선순위는 GitHub > Vercel Blob > 로컬 파일
+ *
+ * - GITHUB_TOKEN·GITHUB_REPO 가 있으면 글·이미지를 레포에 커밋한다(권장).
+ *   읽기는 배포된 번들의 content/columns 를 그대로 쓰므로 외부 호출이 없다.
+ * - BLOB_READ_WRITE_TOKEN 만 있으면 기존 Vercel Blob 방식으로 동작한다.
+ *   (무료 플랜 operation 한도를 넘기면 스토어가 정지되니 GitHub 방식을 권장)
+ * - 둘 다 없으면 로컬 개발용으로 content/ 아래 파일에 저장한다.
  */
 const columnsDirectory = path.join(process.cwd(), "content/columns");
 export const uploadsDirectory = path.join(process.cwd(), "content/uploads");
 const BLOB_PREFIX = "columns/";
+/** GitHub 모드에서 글·이미지가 놓이는 레포 경로 */
+const REPO_COLUMNS = "content/columns";
+const REPO_UPLOADS = "public/uploads";
 const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
 /** 본문에 넣을 수 있는 이미지 장수 (썸네일 1장 + 본문 4장 = 총 5장) */
@@ -283,13 +291,12 @@ export async function reindexColumns(): Promise<{ count: number }> {
 
 /** 목록용 메타 — blob 모드에서는 index.json 하나만 읽는다 (본문 fetch 없음) */
 async function readAllMeta(): Promise<ColumnMeta[]> {
-  if (useBlob()) {
+  if (useBlob() && !useGithub()) {
     const entries = await readIndexOrHeal();
-    if (!entries) {
-      console.error("[columns] columns/index.json 을 읽을 수 없습니다. /api/columns/reindex 로 재색인해 주세요.");
-      return [];
-    }
-    return entries.map((e) => toMeta(e.slug, e.data));
+    if (entries) return entries.map((e) => toMeta(e.slug, e.data));
+    // 스토어 정지·색인 손상 등 — 레포에 커밋된 사본이라도 보여 준다.
+    // (2026-09 에 Blob 스토어가 한도 초과로 정지되면서 칼럼이 통째로 사라진 적이 있다)
+    console.error("[columns] Blob 색인을 읽지 못해 content/columns 사본으로 대체합니다.");
   }
   if (!fs.existsSync(columnsDirectory)) return [];
   return fs
@@ -304,6 +311,12 @@ async function readAllMeta(): Promise<ColumnMeta[]> {
 
 async function readRaw(slug: string): Promise<string | null> {
   if (!isValidSlug(slug)) return null;
+  if (useGithub()) {
+    const fullPath = path.join(columnsDirectory, `${slug}.md`);
+    if (fs.existsSync(fullPath)) return fs.readFileSync(fullPath, "utf8");
+    // 방금 발행해 아직 재배포 전인 글은 번들에 없다 — 레포에서 바로 읽어 준다
+    return readFromRepo(`${REPO_COLUMNS}/${slug}.md`);
+  }
   if (useBlob()) {
     const entries = await readIndexOrHeal();
     const version = entries?.find((e) => e.slug === slug)?.updatedAt;
@@ -320,6 +333,10 @@ async function readRaw(slug: string): Promise<string | null> {
 
 async function existsRaw(slug: string): Promise<boolean> {
   if (!isValidSlug(slug)) return false;
+  if (useGithub()) {
+    if (fs.existsSync(path.join(columnsDirectory, `${slug}.md`))) return true;
+    return existsInRepo(`${REPO_COLUMNS}/${slug}.md`);
+  }
   if (useBlob()) {
     const entries = await readIndexOrHeal();
     if (entries?.some((e) => e.slug === slug)) return true;
@@ -336,6 +353,19 @@ async function existsRaw(slug: string): Promise<boolean> {
 
 /** advanced operation 2회 (md 1 + index 1) */
 async function writeRaw(slug: string, file: string) {
+  if (useGithub()) {
+    await commitFiles(
+      [{ path: `${REPO_COLUMNS}/${slug}.md`, content: file, encoding: "utf-8" }],
+      [],
+      `content: 칼럼 저장 — ${slug}`
+    );
+    return;
+  }
+  if (isEphemeral()) {
+    throw new Error(
+      "저장소가 연결되어 있지 않습니다. 배포 환경에서는 글이 저장되지 않으니 GITHUB_TOKEN·GITHUB_REPO 환경변수를 설정해 주세요."
+    );
+  }
   if (useBlob()) {
     await put(`${BLOB_PREFIX}${slug}.md`, file, {
       access: "public",
@@ -352,6 +382,11 @@ async function writeRaw(slug: string, file: string) {
 }
 
 async function removeRaw(slug: string): Promise<boolean> {
+  if (useGithub()) {
+    if (!(await existsRaw(slug))) return false;
+    await commitFiles([], [`${REPO_COLUMNS}/${slug}.md`], `content: 칼럼 삭제 — ${slug}`);
+    return true;
+  }
   if (useBlob()) {
     if (!(await existsRaw(slug))) return false;
     await del(`${BLOB_PREFIX}${slug}.md`);
@@ -483,6 +518,21 @@ export async function saveUpload(file: File): Promise<string> {
   if (file.size > 8 * 1024 * 1024) throw new Error("이미지는 8MB 이하만 업로드할 수 있습니다.");
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
+  if (useGithub()) {
+    const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+    await commitFiles(
+      [{ path: `${REPO_UPLOADS}/${name}`, content: base64, encoding: "base64" }],
+      [],
+      `content: 이미지 업로드 — ${name}`
+    );
+    // public/ 아래라 배포 후 정적 파일로 바로 서빙된다
+    return `/uploads/${name}`;
+  }
+  if (isEphemeral()) {
+    throw new Error(
+      "저장소가 연결되어 있지 않습니다. 배포 환경에서는 이미지가 저장되지 않으니 GITHUB_TOKEN·GITHUB_REPO 환경변수를 설정해 주세요."
+    );
+  }
   if (useBlob()) {
     const blob = await put(`uploads/${name}`, file, {
       access: "public",
