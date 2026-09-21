@@ -7,7 +7,7 @@ import EditorActions from "@/components/columns/EditorActions";
 import { formatDate, formatPublishAt, getAllColumns, getColumnBySlug } from "@/lib/columns";
 import { isEditor } from "@/lib/auth";
 import { siteConfig } from "@/config/site";
-import { articleJsonLd, breadcrumbJsonLd, jsonLdScript } from "@/lib/jsonld";
+import { articleJsonLd, breadcrumbJsonLd, columnFaqJsonLd, extractFaq, jsonLdScript } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,9 @@ export default async function ColumnDetailPage({ params }: Props) {
     .sort((a, b) => (a.category === column.category ? -1 : 0) - (b.category === column.category ? -1 : 0))
     .slice(0, 3);
 
+  // 본문에 "자주 묻는 질문" 섹션이 있으면 FAQ 구조화 데이터로도 내보낸다
+  const faq = extractFaq(column.raw);
+
   return (
     <>
       <script
@@ -58,9 +61,15 @@ export default async function ColumnDetailPage({ params }: Props) {
             date: column.date,
             slug,
             image: column.thumbnail,
+            images: column.images,
+            tags: column.tags,
+            wordCount: column.raw.replace(/\s/g, "").length,
           })
         )}
       />
+      {faq.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(columnFaqJsonLd(slug, faq))} />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScript(

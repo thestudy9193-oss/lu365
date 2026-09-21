@@ -116,7 +116,13 @@ export function articleJsonLd(a: {
   date: string;
   slug: string;
   image?: string;
+  images?: string[];
+  tags?: string[];
+  wordCount?: number;
 }) {
+  const abs = (u: string) => (u.startsWith("http") ? u : `${url}${u}`);
+  const images = [a.image, ...(a.images ?? [])].filter(Boolean) as string[];
+  const lead = siteConfig.doctors[0];
   return {
     "@context": "https://schema.org",
     "@type": "MedicalWebPage",
@@ -126,10 +132,76 @@ export function articleJsonLd(a: {
     dateModified: a.date,
     inLanguage: "ko-KR",
     mainEntityOfPage: `${url}/columns/${encodeURIComponent(a.slug)}`,
-    image: a.image ? [a.image.startsWith("http") ? a.image : `${url}${a.image}`] : [`${url}${siteConfig.seo.ogImage}`],
-    author: { "@type": "Organization", name: siteConfig.name, url },
+    image: images.length ? images.map(abs) : [`${url}${siteConfig.seo.ogImage}`],
+    // 의료 글은 작성·감수 주체가 드러나야 검색엔진과 AI가 신뢰도(E-E-A-T)를 인정한다
+    author: lead
+      ? { "@type": "Physician", name: lead.name, jobTitle: lead.position, worksFor: { "@id": `${url}/#clinic` } }
+      : { "@type": "Organization", name: siteConfig.name, url },
+    reviewedBy: { "@id": `${url}/#clinic` },
     publisher: { "@id": `${url}/#clinic` },
     about: { "@type": "MedicalCondition", name: "교통사고 후유증" },
+    audience: { "@type": "Patient", geographicArea: { "@type": "City", name: "인천광역시 서구" } },
+    ...(a.tags?.length ? { keywords: a.tags.join(", ") } : {}),
+    ...(a.wordCount ? { wordCount: a.wordCount } : {}),
+    // 음성 비서·AI 요약이 우선 읽을 영역
+    speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", ".prose-column h2", ".prose-column blockquote"] },
+  };
+}
+
+/** 마크다운 문법을 걷어내고 평문만 남긴다 (구조화 데이터용) */
+const stripMd = (s: string) =>
+  s
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/<[^>]+>/g, "")
+    .replace(/[*_`#]/g, "")
+    .replace(/^[-–]\s+/, "")
+    .trim();
+
+/**
+ * 본문 마크다운의 "자주 묻는 질문" 섹션에서 Q&A 를 뽑는다.
+ * `## 자주 묻는 질문` 아래의 `### 질문` + 이어지는 문단을 한 쌍으로 본다.
+ */
+export function extractFaq(markdown: string): { q: string; a: string }[] {
+  const lines = (markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const start = lines.findIndex((l) => /^##\s+.*(자주\s*묻는\s*질문|자주\s*하는\s*질문|FAQ)/i.test(l));
+  if (start === -1) return [];
+
+  const out: { q: string; a: string }[] = [];
+  let q = "";
+  let buf: string[] = [];
+  const flush = () => {
+    const a = buf.join(" ").replace(/\s+/g, " ").trim();
+    if (q && a) out.push({ q, a });
+    q = "";
+    buf = [];
+  };
+
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s/.test(line)) break; // 다음 대제목에서 섹션 종료
+    if (/^###\s+/.test(line)) {
+      flush();
+      q = stripMd(line.replace(/^###\s+/, ""));
+      continue;
+    }
+    if (/^(---|>)/.test(line)) continue;
+    if (q && line.trim()) buf.push(stripMd(line));
+  }
+  flush();
+  return out.slice(0, 10);
+}
+
+/** 칼럼 본문에서 뽑은 Q&A → FAQPage (구글 리치결과 · AI 답변 인용 대상) */
+export function columnFaqJsonLd(slug: string, qa: { q: string; a: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${url}/columns/${encodeURIComponent(slug)}#faq`,
+    mainEntity: qa.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 }
 
