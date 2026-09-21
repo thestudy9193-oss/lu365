@@ -317,18 +317,22 @@ async function readRaw(slug: string): Promise<string | null> {
     // 방금 발행해 아직 재배포 전인 글은 번들에 없다 — 레포에서 바로 읽어 준다
     return readFromRepo(`${REPO_COLUMNS}/${slug}.md`);
   }
+  const fullPath = path.join(columnsDirectory, `${slug}.md`);
+  const fromDisk = () => (fs.existsSync(fullPath) ? fs.readFileSync(fullPath, "utf8") : null);
+
   if (useBlob()) {
     const entries = await readIndexOrHeal();
     const version = entries?.find((e) => e.slug === slug)?.updatedAt;
     try {
-      return await fetchBlobText(`${BLOB_PREFIX}${slug}.md`, version);
+      const file = await fetchBlobText(`${BLOB_PREFIX}${slug}.md`, version);
+      if (file !== null) return file;
     } catch (e) {
-      console.error(`[columns] ${slug} 읽기 실패:`, e);
-      return null;
+      // 스토어 정지 등 — 레포에 커밋된 사본으로 대체한다
+      console.error(`[columns] ${slug} 블롭 읽기 실패, content/columns 사본을 씁니다:`, e);
     }
+    return fromDisk();
   }
-  const fullPath = path.join(columnsDirectory, `${slug}.md`);
-  return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, "utf8") : null;
+  return fromDisk();
 }
 
 async function existsRaw(slug: string): Promise<boolean> {
@@ -337,18 +341,19 @@ async function existsRaw(slug: string): Promise<boolean> {
     if (fs.existsSync(path.join(columnsDirectory, `${slug}.md`))) return true;
     return existsInRepo(`${REPO_COLUMNS}/${slug}.md`);
   }
+  const onDisk = () => fs.existsSync(path.join(columnsDirectory, `${slug}.md`));
   if (useBlob()) {
     const entries = await readIndexOrHeal();
     if (entries?.some((e) => e.slug === slug)) return true;
     // 색인에 없더라도 실제 파일이 있을 수 있으므로 URL 로 한 번 더 확인
     try {
-      return (await fetchBlobText(`${BLOB_PREFIX}${slug}.md`)) !== null;
+      if ((await fetchBlobText(`${BLOB_PREFIX}${slug}.md`)) !== null) return true;
     } catch (e) {
-      console.error(`[columns] ${slug} 확인 실패:`, e);
-      return false;
+      console.error(`[columns] ${slug} 블롭 확인 실패:`, e);
     }
+    return onDisk();
   }
-  return fs.existsSync(path.join(columnsDirectory, `${slug}.md`));
+  return onDisk();
 }
 
 /** advanced operation 2회 (md 1 + index 1) */
