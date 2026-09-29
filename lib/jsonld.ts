@@ -1,4 +1,5 @@
 import { siteConfig } from "@/config/site";
+import { clinicPages, type ClinicPage } from "@/config/clinicPages";
 
 const url = siteConfig.seo.siteUrl;
 
@@ -210,19 +211,56 @@ export function columnFaqJsonLd(slug: string, qa: { q: string; a: string }[]) {
  * 네이버 가이드: image 만 필수, 1페이지에 1개 목록, 항목·이미지 중복 금지,
  * 로고나 기본 이미지는 쓰지 않는다. url 은 절대 경로로 넣는다.
  * https://searchadvisor.naver.com/guide/structured-data-carousel
+ *
+ * 항목 url 은 반드시 서로 다른 페이지여야 한다. 예전엔 홈의 #앵커를 걸었는데
+ * 검색엔진은 # 뒤를 버리므로 5개가 전부 같은 url(홈) 로 보여 중복 처리됐다.
  */
 export function carouselJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "@id": `${url}/#carousel`,
-    itemListElement: siteConfig.carousel.map((c, i) => ({
+    itemListElement: clinicPages.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      name: c.name,
-      image: `${url}${c.image}`,
-      url: `${url}${c.path}`,
+      name: p.carousel.name,
+      image: `${url}${p.carousel.image}`,
+      url: `${url}/clinics/${p.key}`,
     })),
+  };
+}
+
+/** 진료과목 랜딩 페이지 — 병원(@id) 에 딸린 의료 웹페이지 + FAQ */
+export function clinicPageJsonLd(page: ClinicPage) {
+  const pageUrl = `${url}/clinics/${page.key}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "MedicalWebPage",
+        "@id": pageUrl,
+        url: pageUrl,
+        name: `${page.h1} | ${siteConfig.name}`,
+        description: page.description,
+        inLanguage: "ko-KR",
+        primaryImageOfPage: `${url}${page.carousel.image}`,
+        about: { "@type": "MedicalTherapy", name: page.h1, description: page.lead },
+        audience: page.symptoms.join(" / "),
+        isPartOf: { "@id": `${url}/#website` },
+        provider: { "@id": `${url}/#clinic` },
+        lastReviewed: "2026-09-29",
+        reviewedBy: { "@type": "Physician", name: siteConfig.businessOwner, jobTitle: "대표원장" },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${pageUrl}#faq`,
+        mainEntity: page.faq.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
+    ],
   };
 }
 

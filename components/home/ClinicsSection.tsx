@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import SectionTitle from "@/components/SectionTitle";
 import FadeIn from "@/components/animations/FadeIn";
 import { siteConfig } from "@/config/site";
@@ -18,6 +19,7 @@ export default function ClinicsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {siteConfig.clinics.map((c, i) => (
             <FadeIn key={c.key} delay={i * 0.06}>
+              <Link href={`/clinics/${c.key}`} aria-label={`${c.title} 자세히 보기`} className="block">
               <article className="group relative overflow-hidden h-[280px] sm:h-[340px] lg:h-[380px]" style={{ backgroundColor: "#2A1C14" }}>
                 <Image
                   src={c.image}
@@ -49,6 +51,7 @@ export default function ClinicsSection() {
                   </p>
                 </div>
               </article>
+              </Link>
             </FadeIn>
           ))}
         </div>

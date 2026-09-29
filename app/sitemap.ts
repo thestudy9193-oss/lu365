@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { getAllColumns } from "@/lib/columns";
 import { siteConfig } from "@/config/site";
+import { clinicPages } from "@/config/clinicPages";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/columns`, changeFrequency: "weekly" as const, priority: 0.9 },
   ];
 
+  const clinicUrls = clinicPages.map((p) => ({
+    url: `${baseUrl}/clinics/${p.key}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.9,
+  }));
+
   const columnPages = columns.map((column) => ({
     url: `${baseUrl}/columns/${encodeURIComponent(column.slug)}`,
     lastModified: column.date ? new Date(column.date) : new Date(),
@@ -20,5 +27,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...columnPages];
+  return [...staticPages, ...clinicUrls, ...columnPages];
 }
