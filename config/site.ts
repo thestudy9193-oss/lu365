@@ -16,6 +16,8 @@ export const siteConfig = {
     { no: "03", name: "엔시티 1차 주차장", note: "엔시티타워" },
   ],
   kakaoLink: "https://pf.kakao.com/_Jjtgn/chat",
+  // 네이버 예약 (플레이스 1264346896 · 예약 업체 607579) — 모바일/PC 모두 열림
+  naverBookingLink: "https://m.booking.naver.com/booking/13/bizes/607579?theme=place",
   naverMapLink:
     "https://map.naver.com/p/search/%EB%A3%A8%EC%9B%90365%ED%95%9C%EC%9D%98%EC%9B%90",
   naverDirectionsLink:

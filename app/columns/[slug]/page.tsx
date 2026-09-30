@@ -133,7 +133,18 @@ export default async function ColumnDetailPage({ params }: Props) {
             본 글은 건강 정보 제공을 목적으로 작성되었으며 개인의 증상에 대한 진단·치료를 대체하지 않습니다. 증상이 있으신 경우 내원 상담을 권장합니다.
           </div>
 
-          <div className="mt-9 mb-16 sm:mb-20 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+          <a
+            href={siteConfig.naverBookingLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-9 flex items-center justify-center gap-2.5 w-full py-4 text-[15.5px] font-semibold transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "#03C75A", color: "#FFFFFF" }}
+          >
+            <span className="inline-flex items-center justify-center w-6 h-6 text-[13px] font-black" style={{ backgroundColor: "#FFFFFF", color: "#03C75A" }}>N</span>
+            네이버 예약 바로가기
+          </a>
+
+          <div className="mt-2.5 mb-16 sm:mb-20 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
             <a href={`tel:${siteConfig.phone}`} className="btn-gold flex-1">예약 및 상담 {siteConfig.phoneLabel}</a>
             <Link href="/columns" className="btn-outline-ink flex-1">목록으로</Link>
           </div>
