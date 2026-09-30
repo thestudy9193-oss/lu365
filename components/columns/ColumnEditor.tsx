@@ -1,6 +1,6 @@
 "use client";
 
-import { marked } from "marked";
+import { renderMarkdown } from "@/lib/markdown";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
@@ -110,7 +110,7 @@ export default function ColumnEditor({ categories, initial, maxBodyImages }: Pro
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const html = useMemo(() => marked.parse(body) as string, [body]);
+  const html = useMemo(() => renderMarkdown(body), [body]);
   /** 공백 제외 글자수 — 네이버 블로그 기준과 동일하게 센다 */
   const charCount = useMemo(() => body.replace(/\s/g, "").length, [body]);
   const progress = Math.min(100, Math.round((charCount / TARGET_CHARS) * 100));

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import { marked } from "marked";
+import { renderMarkdown } from "@/lib/markdown";
 import { del, list, put } from "@vercel/blob";
 import { commitFiles, existsInRepo, isEphemeral, readFromRepo, useGithub } from "@/lib/githubStore";
 
@@ -421,7 +421,7 @@ export async function getColumnBySlug(slug: string): Promise<Column | null> {
   const file = await readRaw(slug);
   if (file === null) return null;
   const { data, content } = matter(file);
-  const htmlContent = await marked(content);
+  const htmlContent = renderMarkdown(content);
   return { ...toMeta(slug, data), content: htmlContent, raw: content };
 }
 
